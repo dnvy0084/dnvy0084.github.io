@@ -59,6 +59,8 @@ $$(y-ay) = m( x - ax )$$
 \\[y = mx - ma_x+ a _y\\]
 $$x = {-b \pm \sqrt{b^2-4ac} \over 2a}.$$
 
+[mathjax cheat sheet][1]
+
 
 호스팅 했을 때 기본 도메인은 _http://아이디.github.io/_ 혹은 _http://아이디.github.io/프로젝트명_
  이지만 [**custom domain**][gh-help-customdomain]을 이용하면 자신만의 도메인을 부여하는 것도 가능합니다.
@@ -67,3 +69,4 @@ $$x = {-b \pm \sqrt{b^2-4ac} \over 2a}.$$
 [github-pages]: https://pages.github.com/
 [markdown]: http://daringfireball.net/projects/markdown/
 [gh-help-customdomain]: https://help.github.com/articles/setting-up-a-custom-domain-with-github-pages/
+[1]: http://meta.math.stackexchange.com/questions/5020/mathjax-basic-tutorial-and-quick-reference
