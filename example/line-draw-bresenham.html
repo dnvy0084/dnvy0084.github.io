@@ -110,7 +110,7 @@
 		};
 
 		/**
-		* digital differential 
+		* digital differential analyzer
 		*/
 		function lineToDDA( ax, ay, bx, by )
 		{
@@ -159,6 +159,9 @@
 			return buf;
 		};
 
+		/**
+		* bresenham line raster algorithm
+		*/
 		function lineToBresenham( ax, ay, bx, by )
 		{
 			for( var i = 0; i < arguments.length; i++ )
@@ -228,12 +231,16 @@
 				context,						// CanvasRenderingContext2D
 				scene,							// Pixelate instance
 				colorBuffer,					// pixel data cache
-				pixelWidth = 50,				// 개별 픽셀 크기
-				pixelHeight = 50,				// 개별 픽셀 크기
-				backgroundColor = "#6d6d6d";	// 배경 픽셀값 
-				a = { x: 0, y: 0 }, 
-				b = { x: 200, y: 200 };
-				lineToFunc = lineToBresenham;;		// line drawing function
+				pixelWidth = 10,				// 개별 픽셀 크기
+				pixelHeight = 10,				// 개별 픽셀 크기
+				backgroundColor = "#6d6d6d",	// 배경 픽셀값 
+				center = { x: 0, y: 0, color: "#ff00ff" },					// 중점
+				hourHand = { x: 0, y: 0, color: "#0000ff", len: 0.6 },		// 시침
+				minHand = { x: 0, y: 0, color: "#ff0000", len: 0.7 },		// 분침
+				secHand = { x: 0, y: 0, color: "#3d3d3d", len: 0.8 },		// 초침
+				hands = [ hourHand, minHand, secHand ];
+				lineToFunc = lineToBresenham, 	// line drawing function
+				_90radian = Math.PI / 2;
 
 			/**
 			* window.onload 
@@ -246,10 +253,14 @@
 
 				scene = new Pixelate( 10, 10, onRender.bind( this ) );
 
-				canvas.addEventListener( "mousedown", onDown );
-				canvas.addEventListener( "mouseup", onUp );
-
 				onResize( null );
+
+				(function render(){
+
+					draw();
+					requestAnimationFrame( render );
+
+				})();
 			};
 
 
@@ -264,7 +275,11 @@
 
 				scene.col = parseInt( canvas.width / pixelWidth + 0.9 );
 				scene.row = parseInt( canvas.height / pixelHeight + 0.9 );
+
 				scene.clearCache();
+
+				center.x = Math.round(canvas.width / 2);
+				center.y = Math.round(canvas.height / 2);
 
 				draw();
 			};
@@ -275,33 +290,37 @@
 			function draw()
 			{
 				clear();
+				setDate();
 
-				drawLine( a.x, a.y, b.x, b.y );
-				drawPoints( a, b );
+				for( var n = hands.length; n--; )
+					drawHand( center, hands[n] );
 
+				drawPoints( center );
 				scene.draw( colorBuffer );
 			};
 
 			/**
 			* colorBuffer에 (A->B)line을 그려줌. 
 			*/
-			function drawLine( ax, ay, bx, by )
+			function drawLine( ax, ay, bx, by, color )
 			{
-				for( var i = 0, n = arguments.length; i < n; i++ )
+				for( var i = 0, n = 4; i < n; i++ )
 				{
 					if( i % 2 )	arguments[i] = arguments[i] / pixelHeight;
 					else 		arguments[i] = arguments[i] / pixelWidth;
 				}
 
-				var	buf = lineToFunc( ax, ay, bx, by ), x, y;
+				var	buf = lineToFunc( ax, ay, bx, by );
 
 				for( var i = 0, n = buf.length; i < n; i += 2 )
 				{
-					x = buf[i];
-					y = buf[i+1];
-
-					colorBuffer[ y * scene.col + x ] = "#cc0000";
+					colorBuffer[ buf[i+1] * scene.col + buf[i] ] = color;
 				}
+			};
+
+			function drawHand( center, hand )
+			{
+				drawLine( center.x, center.y, hand.x, hand.y, hand.color );
 			};
 
 			/**
@@ -317,7 +336,14 @@
 					x = parseInt( arguments[i].x / pixelWidth );
 					y = parseInt( arguments[i].y / pixelHeight );
 
-					colorBuffer[ y * scene.col + x ] = style[ i % style.length ];
+					if( typeof arguments[i].color !== "undefined" )
+					{
+						colorBuffer[ y * scene.col + x ] = arguments[i].color;
+					}
+					else
+					{
+						colorBuffer[ y * scene.col + x ] = style[ i % style.length ];
+					}
 				}
 			};
 
@@ -332,6 +358,43 @@
 						colorBuffer[i] = backgroundColor;
 				};
 			};
+
+			/**
+			* get date: return [ hour, min, sec ];
+			*/
+			function getAnglesByDate()
+			{
+				var d = new Date(),
+					h = d.getHours(),
+					m = d.getMinutes(),
+					s = d.getSeconds(),
+					hAng = 2 * ( h / 12 + 1 / 12 * m / 60 ) * Math.PI - _90radian;
+
+				return [ 
+					hAng,
+					d.getMinutes() / 30 * Math.PI - _90radian,
+					d.getSeconds() / 30 * Math.PI - _90radian
+				];
+			}
+
+			/**
+			* 
+			*/
+			function setDate()
+			{
+				var angles = getAnglesByDate(),
+					canvasLen = Math.min( canvas.width, canvas.height ) / 2,
+					hand, ang;
+
+				for( var i = 0, n = angles.length; i < n; i++ )
+				{
+					hand = hands[i];
+					handLen = canvasLen * hand.len;
+
+					hand.x = center.x + handLen * Math.cos( angles[i] );
+					hand.y = center.y + handLen * Math.sin( angles[i] );
+				}
+			}
 
 			/**
 			* Pixelate.render
@@ -355,39 +418,6 @@
 
 				context.restore();
 			};
-
-
-			/**
-			*	mouse event listeners 
-			*/
-			function onDown( e )
-			{
-				canvas.addEventListener( "mousemove", onMove );
-				
-
-				onMove( e );
-			};
-
-			function onMove( e )
-			{
-				if( e.ctrlKey )
-				{
-					a.x = e.clientX;
-					a.y = e.clientY;
-				}
-				else
-				{
-					b.x = e.clientX;
-					b.y = e.clientY;
-				}
-
-				draw();
-			};
-
-			function onUp( e )
-			{
-				canvas.removeEventListener( "mousemove", onMove );
-			};	
 
 			window.onload = init;
 			window.onresize = onResize;
