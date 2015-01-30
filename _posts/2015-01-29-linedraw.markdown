@@ -5,7 +5,7 @@ date:   2015-01-29 18:00:00
 categories: update
 ---
 
-line pixelate - [view source][1]
+line pixelate
 ======
 픽셀로 이루어진 디지털 공간에 선을 그리기 위해서는 두 점 사이에서 적절한 픽셀을 선택하는 과정이 필요합니다. 
 
@@ -130,11 +130,15 @@ function lineTo( ax, ay, bx, by ) // arguments 모두 int형
 	}
 	```
 
-	dda와 비교해보면 정수 연산이라 빠르다는 점과 $dx= 0$이라도 별다른 예외처리가 필요 없다는 점이 강점이라 할 수 있습니다. 
+	for loop 안쪽이 모두 정수 연산이라 
 
+	[Canvas example][6]
+	======
+	[- view source][1]
 
 [1]: https://github.com/dnvy0084/math/blob/master/line-draw-bresenham/line-draw-bresenham.html
 [2]: http://en.wikipedia.org/wiki/Linear_equation
 [3]: http://en.wikipedia.org/wiki/Digital_differential_analyzer_(graphics_algorithm)
 [4]: http://en.wikipedia.org/wiki/Bresenham's_line_algorithm
 [5]: /raw/bres1.gif "bresenham"
+[6]: {{ site.url }}example/line-draw-bresenham.html

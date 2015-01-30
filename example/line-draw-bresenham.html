@@ -1,0 +1,403 @@
+<html>
+<head>
+	<title>bresenham line draw algorithm example</title>
+	<style type="text/css">
+		body{ margin: 0; }
+		canvas{ background-color: #cdcdcd; }
+	</style>
+	
+	<!-- Pixelate Class -->
+	<script type="text/javascript"> 
+
+		/**
+		* colorBuffer로 현재 픽셀 값을 저장하여 변경된 픽셀만 render 이벤트 발생. 
+		*/
+		function Pixelate( col, row, renderCallback )
+		{
+			this.col = col;
+			this.row = row;
+			this.render = renderCallback;
+
+			this.colorBuffer = [];
+		};
+
+		Pixelate.prototype = 
+		{
+			draw: function( buffer )
+			{
+				for( var i = 0, n = buffer.length; i < n; i++ )
+				{
+					if( typeof buffer === "undefined" || 
+						buffer[i] === this.colorBuffer[i] ) continue;
+
+					this.colorBuffer[i] = buffer[i]; 
+
+					this.render( i % this.col, parseInt( i / this.col ), this.colorBuffer[i] );
+				}
+			},
+
+			clearCache: function()
+			{
+				this.colorBuffer = [];
+			}
+		};
+	</script>
+
+	<!-- Line Draw Methods -->
+	<script type="text/javascript">
+
+		/**
+		* 1차 함수를 이용한 line pixelate
+		*/
+		function lineTolinearFunc( ax, ay, bx, by )
+		{
+			//정수 변환
+			for( var i = 0; i < arguments.length; i++ )
+				arguments[i] = parseInt( arguments[i] );
+
+			buf = [];
+
+			var dx = bx - ax,
+				dy = by - ay,
+				m, b, di, x, y, t;
+				// m: 기울기
+				// b: y 절편
+				// di: 방향에 따른 x(혹은 y)의 증가량. 
+				// x, y: 초기 loop 시작 값
+				// t: loop 목표값. 
+				
+			// x의 증가폭이 y보다 클 경우
+			// x를 1씩 증가시켜 y의 좌표를 구함
+			// 선이 중간 중간 끊어져 보이는 현상을 방지
+			if( Math.abs( dx ) > Math.abs( dy ) )
+			{
+				m = dy / dx;				
+				b = -m * ax + ay,	
+
+				// ax가 작을 경우 +1 반대는 -1 1픽셀씩 가(감)함. 
+				di = ax < bx ? +1 : -1;
+
+				// 목표점. bx도 포함될 수 있게 진행방향으로 한 픽셀 더가서 잡아줌. 
+				t = bx + di;
+
+				for( x = ax; x != t; x += di )
+				{
+					y = m * x + b;
+
+					buf.push( x );
+					buf.push( Math.round( y ) );
+	 			}
+			}
+			// 증가폭의 크기가 반대의 경우
+			// y에 대한 x의 증가분을 구하면 됨
+			else
+			{
+				m = dx / dy;
+				b = -m * ay + ax,
+				di = ay < by ? + 1 : -1;
+				t = by + di;
+
+				for( y = ay; y != t; y += di )
+				{
+					x = m * y + b;
+
+					buf.push( Math.round( x ) );
+					buf.push( y );
+				}
+			}
+
+			return buf;
+		};
+
+		/**
+		* digital differential 
+		*/
+		function lineToDDA( ax, ay, bx, by )
+		{
+			for( var i = 0; i < arguments.length; i++ )
+				arguments[i] = parseInt( arguments[i] );
+
+			buf = [ ax, ay ];
+
+			var dx = Math.abs( bx - ax ),
+				dy = Math.abs( by - ay ),
+				m, di, x, y, t;
+
+			if( dx > dy )
+			{
+				m = dy / dx;
+				di = ax < bx ? +1 : -1;
+				t = bx + di;
+
+				if( ay > by ) m = -m;
+
+				for( x = ax, y = ay; x != t; x += di )
+				{
+					buf.push( x );
+					buf.push( Math.round( y ) );
+
+					y += m;
+				}
+			}
+			else
+			{
+				m = dx / dy;
+				di = ay < by ? +1 : -1;
+				t = by + di;
+
+				if( ax > bx ) m = -m;
+
+				for( x = ax, y = ay; y != t; y += di )
+				{
+					buf.push( Math.round( x ) );
+					buf.push( y );
+
+					x += m;
+				}
+			}
+
+			return buf;
+		};
+
+		function lineToBresenham( ax, ay, bx, by )
+		{
+			for( var i = 0; i < arguments.length; i++ )
+				arguments[i] = parseInt( arguments[i] );
+
+			var dx = Math.abs( bx - ax ),
+				dy = Math.abs( by - ay ),
+				m, e, x, y, di, dt, t;
+
+			var buf = [];
+
+			if( dx > dy )
+			{
+				di = ax < bx ? +1 : -1;
+				dt = ay < by ? +1 : -1;
+				t = bx + di;
+				m = dy / dx;
+				e = 0;
+
+				for( x = ax, y = ay; x != t; x += di )
+				{
+					buf.push( x );
+					buf.push( y );
+
+					e += dy;
+
+					if( ( e << 1 ) > dx )
+					{
+						y = y + dt;
+						e -= dx;
+					}
+				}
+			}
+			else
+			{
+				di = ay < by ? +1 : -1;
+				dt = ax < bx ? +1 : -1;
+				t = by + di;
+				m = dx / dy;
+				e = 0;
+
+				for( x = ax, y = ay; y != t; y += di )
+				{
+					buf.push( x );
+					buf.push( y );
+
+					e += dx;
+
+					if( ( e << 1 ) > dy )
+					{
+						x = x + dt;
+						e -= dy;
+					}
+				}
+			}
+
+			return buf;
+		};
+
+	</script>
+
+	<!-- Main Documentaion -->
+	<script type="text/javascript">
+		(function (){
+			
+			var canvas,							// canvas element
+				context,						// CanvasRenderingContext2D
+				scene,							// Pixelate instance
+				colorBuffer,					// pixel data cache
+				pixelWidth = 50,				// 개별 픽셀 크기
+				pixelHeight = 50,				// 개별 픽셀 크기
+				backgroundColor = "#6d6d6d";	// 배경 픽셀값 
+				a = { x: 0, y: 0 }, 
+				b = { x: 200, y: 200 };
+				lineToFunc = lineToBresenham;;		// line drawing function
+
+			/**
+			* window.onload 
+			*/
+			function init()
+			{
+				canvas = document.getElementById( "canvas" );
+				context = canvas.getContext( "2d" );
+				colorBuffer = [];
+
+				scene = new Pixelate( 10, 10, onRender.bind( this ) );
+
+				canvas.addEventListener( "mousedown", onDown );
+				canvas.addEventListener( "mouseup", onUp );
+
+				onResize( null );
+			};
+
+
+			/**
+			* window.onresize
+			*  - 전체 캔버스를 다시 그려줌.  
+			*/
+			function onResize( e )
+			{
+				canvas.width = document.body.clientWidth;
+				canvas.height = document.body.clientHeight;
+
+				scene.col = parseInt( canvas.width / pixelWidth + 0.9 );
+				scene.row = parseInt( canvas.height / pixelHeight + 0.9 );
+				scene.clearCache();
+
+				draw();
+			};
+
+			/**
+			* colorBuffer를 Pixelate로 전달 draw 호출. 
+			*/
+			function draw()
+			{
+				clear();
+
+				drawLine( a.x, a.y, b.x, b.y );
+				drawPoints( a, b );
+
+				scene.draw( colorBuffer );
+			};
+
+			/**
+			* colorBuffer에 (A->B)line을 그려줌. 
+			*/
+			function drawLine( ax, ay, bx, by )
+			{
+				for( var i = 0, n = arguments.length; i < n; i++ )
+				{
+					if( i % 2 )	arguments[i] = arguments[i] / pixelHeight;
+					else 		arguments[i] = arguments[i] / pixelWidth;
+				}
+
+				var	buf = lineToFunc( ax, ay, bx, by ), x, y;
+
+				for( var i = 0, n = buf.length; i < n; i += 2 )
+				{
+					x = buf[i];
+					y = buf[i+1];
+
+					colorBuffer[ y * scene.col + x ] = "#cc0000";
+				}
+			};
+
+			/**
+			* a 포인트는 0xff, b 포인트는 0xff00 으로 표시 
+			*/
+			function drawPoints()
+			{
+				var x, y,
+					style = [ "#0000ff", "#00ff00" ];
+
+				for( var i = 0; i < arguments.length; i++ )
+				{
+					x = parseInt( arguments[i].x / pixelWidth );
+					y = parseInt( arguments[i].y / pixelHeight );
+
+					colorBuffer[ y * scene.col + x ] = style[ i % style.length ];
+				}
+			};
+
+			/**
+			* 픽셀 캐쉬를 모두 배경 픽셀로 교체 
+			*/
+			function clear()
+			{
+				for( var i = 0, n = scene.col * scene.row; i < n; i++ )
+				{
+					if( colorBuffer[i] !== backgroundColor )
+						colorBuffer[i] = backgroundColor;
+				};
+			};
+
+			/**
+			* Pixelate.render
+			*  - 개별 픽셀 렌더링 이벤트
+			*/
+			function onRender( x, y, data )
+			{
+				if( x >= scene.col || y >= scene.row ) return;
+
+				x *= pixelWidth;
+				y *= pixelHeight;
+
+				context.clearRect( x, y, pixelWidth, pixelHeight );
+				context.save();
+
+					context.setTransform( 1,0,0,1, x + 1, y + 1 );
+					context.beginPath();
+					context.rect( 0, 0, pixelWidth - 1, pixelHeight - 1 );
+					context.fillStyle = data;
+					context.fill();
+
+				context.restore();
+			};
+
+
+			/**
+			*	mouse event listeners 
+			*/
+			function onDown( e )
+			{
+				canvas.addEventListener( "mousemove", onMove );
+				
+
+				onMove( e );
+			};
+
+			function onMove( e )
+			{
+				if( e.ctrlKey )
+				{
+					a.x = e.clientX;
+					a.y = e.clientY;
+				}
+				else
+				{
+					b.x = e.clientX;
+					b.y = e.clientY;
+				}
+
+				draw();
+			};
+
+			function onUp( e )
+			{
+				canvas.removeEventListener( "mousemove", onMove );
+			};	
+
+			window.onload = init;
+			window.onresize = onResize;
+
+		})();
+	</script>
+</head>
+<body>
+	<div class="wrapper">
+		<canvas id="canvas"></canvas>
+	</div>
+</body>
+</html>
