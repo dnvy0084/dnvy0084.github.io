@@ -112,7 +112,7 @@ function detectSegment( va, vb, vc, vd )
 
 [1]: http://en.wikipedia.org/wiki/Line_segment
 [2]: http://ko.wikipedia.org/wiki/%ED%81%AC%EB%9D%BC%EB%A9%94%EB%A5%B4_%EA%B3%B5%EC%8B%9D
-[3]: {{ site.url }}example/line-draw-bresenham.html
+[3]: {{ site.url }}example/line-segmentation.html
 [4]: https://github.com/dnvy0084/math/blob/master/line-segmentation/line-segmentation.html
 
 [10]: /raw/line-segment-mat-01.png "matrix"
