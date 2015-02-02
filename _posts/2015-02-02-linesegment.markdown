@@ -83,19 +83,21 @@ code
 function detectSegment( va, vb, vc, vd )
 {
 	var AB = vb.sub( va ),
-		CD = vd.sub( vc ),
-		AC = vc.sub( va );
-
+		CD = vd.sub( vc );
+	
 	var a = AB.dot( AB ),
 		b = CD.dot( AB ), 
 		c = AB.dot( CD ),
-		d = CD.dot( CD ),
-		e = AC.dot( AB ),
-		f = AC.dot( CD );
-
+		d = CD.dot( CD );
+	
 	var detM = -a * d + b * c;
 
 	if( detM == 0 ) return null; // 행렬식이 없으면 평행하거나, 겹치는 경우. 
+
+	var AC = vc.sub( va );
+	
+	var e = AC.dot( AB ),
+		f = AC.dot( CD );
 
 	var s = ( -e * d + b * f ) / detM,
 		t = ( a * f - c * e ) / detM;
