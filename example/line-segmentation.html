@@ -102,18 +102,28 @@
 
 				lines.push( new Line( new Vector2D( 0, 0 ), new Vector2D( canvas.width, canvas.height ), 2, "#9d9d9d" ) );
 
-				lines.push( new Line( new Vector2D( 0, canvas.height ), new Vector2D( 800, 0 ), 2, "#9d9d9d" ) );
+				lines.push( new Line( new Vector2D( 0, canvas.height ), new Vector2D( canvas.width * 0.8, 0 ), 2, "#9d9d9d" ) );
 
 				checkSegment();
 				draw();
 
 				canvas.addEventListener( "mousedown", ondown );
 				canvas.addEventListener( "mouseup", onup );
+
+				canvas.addEventListener( "touchstart", ondown );
+				canvas.addEventListener( "touchend", ondown );
+
+				document.body.addEventListener( "touchstart", function(e){
+					e.preventDefault();
+				})
 			};
 
 			function ondown( e )
 			{
 				e.preventDefault();
+
+				if( e.type == "touchstart" && e.changedTouches.length )
+					e = e.changedTouches[0];
 
 				drawingLine = new Line( 
 					new Vector2D( e.clientX, e.clientY ),
@@ -124,11 +134,15 @@
 				lines.push( drawingLine );
 
 				canvas.addEventListener( "mousemove", onmove );
+				canvas.addEventListener( "touchmove", onmove );
 			};
 
 			function onmove( e )
 			{
 				e.preventDefault();
+
+				if( e.type == "touchmove" && e.changedTouches.length )
+					e = e.changedTouches[0];
 
 				drawingLine.b.x = e.clientX;
 				drawingLine.b.y = e.clientY;
@@ -144,6 +158,7 @@
 				drawingLine = null;
 
 				canvas.removeEventListener( "mousemove", onmove );
+				canvas.removeEventListener( "touchmove", onmove );
 			};
 
 			function checkSegment()
@@ -173,19 +188,20 @@
 			function detectSegment( va, vb, vc, vd )
 			{
 				var AB = vb.sub( va ),
-					CD = vd.sub( vc ),
-					AC = vc.sub( va );
-
+					CD = vd.sub( vc );
+				
 				var a = AB.dot( AB ),
-					b = CD.dot( AB ), 
-					c = AB.dot( CD ),
-					d = CD.dot( CD ),
-					e = AC.dot( AB ),
-					f = AC.dot( CD );
-
+					b = c = AB.dot( CD ),
+					d = CD.dot( CD );
+				
 				var detM = -a * d + b * c;
 
 				if( detM == 0 ) return null; // 행렬식이 없으면 평행하거나, 겹치는 경우. 
+
+				var AC = vc.sub( va );
+
+				var e = AC.dot( AB ),
+					f = AC.dot( CD );
 
 				var s = ( -e * d + b * f ) / detM,
 					t = ( a * f - c * e ) / detM;
