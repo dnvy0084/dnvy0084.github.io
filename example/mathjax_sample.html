@@ -1,0 +1,49 @@
+<html>
+<head>
+	<title>mathjax sample</title>
+	<style type="text/css">
+		li{ margin: 30; }
+	</style>
+	<script type="text/x-mathjax-config">
+		MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+	</script>
+
+	<script type="text/javascript"
+	    src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+	</script>
+</head>
+<body>
+	<div class="wrapper">
+		<ul>
+			<li>
+				$
+				        \begin{bmatrix}
+				        a & -b \\
+				        c & -d \\
+				        \end{bmatrix}
+				        \begin{bmatrix}
+				        s \\
+				        t \\
+				        \end{bmatrix} = 
+				        \begin{bmatrix}
+				        e \\
+				        f \\
+				        \end{bmatrix}
+				$
+			</li>
+			<li>
+				$\bigl( \begin{smallmatrix} a & -b \\ c & -d \end{smallmatrix} \bigr)$
+			</li>
+			<li>
+				$\bigl( \begin{smallmatrix} e \\ f \end{smallmatrix} \bigr)$
+			</li>
+			<li>
+				$\bigl( \begin{smallmatrix} e & -b \\ f & -d \end{smallmatrix} \bigr)$
+			</li>
+			<li>
+				$\bigl( \begin{smallmatrix} a & e \\ c & f \end{smallmatrix} \bigr)$
+			</li>
+		</ul>
+	</div>
+</body>
+</html>

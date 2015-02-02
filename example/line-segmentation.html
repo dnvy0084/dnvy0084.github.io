@@ -1,0 +1,241 @@
+<html>
+<head>
+	<title>line segment check</title>
+	<style type="text/css">
+
+		body{ margin: 0; };
+
+		.watermark{
+			position: absolute;
+			top: 0px;
+			left: 100%;
+			font-family: NanumGothic;
+			font-size: 100px;
+			border: 1px solid #000;
+		}
+
+		canvas{ 
+			position: absolute;
+			top: 0;
+		};
+
+	</style>
+	<script type="text/javascript">
+
+		function Vector2D( x, y )
+		{
+			this.x = x || 0;
+			this.y = y || 0;
+		};
+
+		Vector2D.prototype = 
+		{
+			add: function( v )
+			{
+				return new Vector2D(
+					this.x + v.x,
+					this.y + v.y
+				);
+			},
+
+			sub: function( v )
+			{
+				return new Vector2D(
+					this.x - v.x,
+					this.y - v.y
+				);
+			},
+
+			mul: function( v )
+			{
+				return new Vector2D(
+					this.x * v.x,
+					this.y * v.y
+				);
+			},
+
+			dot: function( v )
+			{
+				return this.x * v.x + this.y * v.y;
+			},
+
+			scale: function( len )
+			{
+				this.x *= len;
+				this.y *= len;
+
+				return this;
+			},
+
+			clone: function()
+			{
+				return new Vector2D( this.x, this.y );
+			}
+		};
+
+		function Line( a, b, thickness, color )
+		{
+			this.a = a || new Vector2D();
+			this.b = b || new Vector2D();
+
+			this.thickness = thickness || 1;
+			this.color = color || "#000000";
+		};
+
+	</script>
+	<script type="text/javascript">
+		(function (){
+			
+			var canvas,
+				context,
+				lines = [],
+				points = [],
+				drawingLine;
+
+			function init()
+			{
+				canvas = document.getElementById( "canvas" );
+				context = canvas.getContext( "2d" );
+
+				canvas.width = document.body.clientWidth;
+				canvas.height = document.body.clientHeight;
+
+				lines.push( new Line( new Vector2D( 0, 0 ), new Vector2D( canvas.width, canvas.height ), 2, "#9d9d9d" ) );
+
+				lines.push( new Line( new Vector2D( 0, canvas.height ), new Vector2D( 800, 0 ), 2, "#9d9d9d" ) );
+
+				checkSegment();
+				draw();
+
+				canvas.addEventListener( "mousedown", ondown );
+				canvas.addEventListener( "mouseup", onup );
+			};
+
+			function ondown( e )
+			{
+				e.preventDefault();
+
+				drawingLine = new Line( 
+					new Vector2D( e.clientX, e.clientY ),
+					new Vector2D( e.clientX, e.clientY ),
+					2, "#9d9d9d"
+				);
+
+				lines.push( drawingLine );
+
+				canvas.addEventListener( "mousemove", onmove );
+			};
+
+			function onmove( e )
+			{
+				e.preventDefault();
+
+				drawingLine.b.x = e.clientX;
+				drawingLine.b.y = e.clientY;
+
+				checkSegment();
+				draw();
+			};
+
+			function onup( e )
+			{
+				e.preventDefault();
+
+				drawingLine = null;
+
+				canvas.removeEventListener( "mousemove", onmove );
+			};
+
+			function checkSegment()
+			{
+				points = [];
+
+				var a, b, p;
+
+				for( var i = 0, n = lines.length - 1; i < n; i++ )
+				{
+					a = lines[i];
+
+					for( var j = i + 1; j <= n; j++ )
+					{
+						b = lines[j];
+
+						p = detectSegment( a.a, a.b, b.a, b.b );
+
+						if( p != null ) points.push( p );
+					}
+				}
+			};
+
+			/**
+			* va -> vb, vc -> vd의 두개 선분 교차점 검색
+			*/
+			function detectSegment( va, vb, vc, vd )
+			{
+				var AB = vb.sub( va ),
+					CD = vd.sub( vc ),
+					AC = vc.sub( va );
+
+				var a = AB.dot( AB ),
+					b = CD.dot( AB ), 
+					c = AB.dot( CD ),
+					d = CD.dot( CD ),
+					e = AC.dot( AB ),
+					f = AC.dot( CD );
+
+				var detM = -a * d + b * c;
+
+				if( detM == 0 ) return null; // 행렬식이 없으면 평행하거나, 겹치는 경우. 
+
+				var s = ( -e * d + b * f ) / detM,
+					t = ( a * f - c * e ) / detM;
+
+				if( s < 0 || s > 1 || t < 0 || t > 1 ) return null;
+
+				return AB.scale( s ).add( va );
+			};
+
+			function draw()
+			{
+				context.clearRect( 0, 0, canvas.width, canvas.height );
+				context.save();
+
+				var line, point;
+
+				for( var i = 0, n = lines.length; i < n; i++ )
+				{
+					line = lines[i];
+
+					context.lineWidth = line.thickness;
+					context.strokeStyle = line.color;
+					context.beginPath();
+					context.moveTo( line.a.x, line.a.y );
+					context.lineTo( line.b.x, line.b.y );
+					context.stroke();	
+				}
+
+				for( i = 0, n = points.length; i < n; i++ )
+				{
+					point = points[i];
+
+					context.fillStyle = "#ff0000";
+					context.beginPath();
+					context.arc( point.x, point.y, 5, 0, 2 * Math.PI );
+					context.fill();
+				}
+
+				context.restore();
+			};
+
+			window.onload = init;
+
+		})();
+	</script>
+</head>
+<body>
+	<div class="wrapper">
+		<div class="watermark">drag!</div>
+		<canvas id="canvas"></canvas>
+	</div>
+</body>
+</html>
