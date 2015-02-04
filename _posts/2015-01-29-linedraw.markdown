@@ -143,7 +143,7 @@ function lineTo( ax, ay, bx, by ) // arguments 모두 int형
 [Lego Clock][7]
 ======
 
-<iframe width="100%" height="400" src="http://dnvy0084.github.io/example/line-draw-lego-rendering.html" frameborder="0" allowfullscreen></iframe>
+<iframe width="100%" height="500" src="http://dnvy0084.github.io/example/line-draw-lego-rendering.html" frameborder="0" allowfullscreen></iframe>
 
 [*소스보기*][1]
 
