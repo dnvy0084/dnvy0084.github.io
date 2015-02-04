@@ -254,11 +254,15 @@
 				context = canvas.getContext( "2d" );
 				colorBuffer = [];
 
-				pixelImg = getImageData( document.getElementById( "pixel" ) );
+				var scale = Math.min( 1.0, Math.max( 0.5, document.body.clientWidth / 1920 ) );
+
+				pixelImg = getImageData( document.getElementById( "pixel" ), scale );
 				originalBuf = cloneArrayBuffer( pixelImg.data );
 
 				pixelWidth = pixelImg.width;
 				pixelHeight = pixelImg.height;
+
+				console.log( pixelImg );
 
 				scene = new Pixelate( 10, 10, onRender.bind( this ) );
 
@@ -463,11 +467,14 @@
 				return img;
 			};
 
-			function getImageData( image )
+			function getImageData( image, scale )
 			{
-				context.drawImage( image, 0, 0 );
+				var dw = parseInt( image.clientWidth * scale  ),
+					dh = parseInt( image.clientHeight * scale );
 
-				var imgData = context.getImageData( 0, 0, image.width, image.height );
+				context.drawImage( image, 0, 0, dw, dh );
+
+				var imgData = context.getImageData( 0, 0, dw, dh );
 
 				context.clearRect( 0, 0, image.width, image.height );
 

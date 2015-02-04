@@ -139,10 +139,14 @@ function lineTo( ax, ay, bx, by ) // arguments 모두 int형
 [Canvas example][6]
 ======
 위 3가지 방법으로 라인을 그리는 예제입니다. 
-[*소스보기*][1]
 
 [Lego Clock][7]
 ======
+
+<iframe width="100%" height="400" src="http://dnvy0084.github.io/example/line-draw-lego-rendering.html" frameborder="0" allowfullscreen></iframe>
+
+[*소스보기*][1]
+
 
 [1]: https://github.com/dnvy0084/math/blob/master/line-draw-bresenham/line-draw-bresenham.html
 [2]: http://en.wikipedia.org/wiki/Linear_equation
