@@ -12,6 +12,7 @@
 
 		Vector2D.prototype = 
 		{
+			//더하기
 			add: function( v )
 			{
 				return new Vector2D(
@@ -20,6 +21,7 @@
 				);
 			},
 
+			//빼기
 			sub: function( v )
 			{
 				return new Vector2D(
@@ -28,20 +30,13 @@
 				);
 			},
 
-			mul: function( v )
-			{
-				return new Vector2D(
-					this.x * v.x,
-					this.y * v.y
-				);
-			},
-
-
+			// 내적
 			dot: function( v )
 			{
 				return this.x * v.x + this.y * v.y;
 			},
 
+			// 스칼라 곱
 			scale: function( len )
 			{
 				this.x *= len;
@@ -50,19 +45,19 @@
 				return this;
 			},
 
+			// 길이
 			length: function()
 			{
-				var x = ( this.x < 0 ) ? -this.x : this.x,
-					y = ( this.y < 0 ) ? -this.y : this.y;
-
-				return Math.sqrt( x * x + y * y );
+				return Math.sqrt( this.x * this.x + this.y * this.y );
 			},
 
+			// 제곱근 계산 전 길이 - 길이 비교만 할 경우 제곱근 계산이 필요 없음. 
 			lengthNonSqrt: function()
 			{
 				return this.x * this.x + this.y * this.y;
 			},
 
+			// 정규화
 			normalize: function()
 			{
 				var len = this.length();
@@ -73,6 +68,7 @@
 				);
 			},
 
+			// 법선 벡터
 			normal: function( ccw )
 			{
 				if( ccw ) 
@@ -81,6 +77,7 @@
 				return new Vector2D( -this.y, this.x );
 			},
 
+			// 좌표 출력
 			toString: function()
 			{
 				function _f3( f ) 
@@ -93,6 +90,9 @@
 		};
 
 
+		/**
+		*	라인 a 벡터 -> b 벡터로 가는 라인 클래스  
+		*/
 		function Line( a, b, thickness, color )
 		{
 			this.a = a || new Vector2D();
@@ -107,17 +107,17 @@
 	<script type="text/javascript">
 		(function (){
 			
-			var canvas,
-				context,
-				drawingLine,
-				firingLine,
-				lines = [],
-				balls = [],
-				ballRadius = 5,
-				ballStyle = "#ff0000",
-				_360radian = 2 * Math.PI,
-				G = 0.35,
-				friction = 0.90;
+			var canvas,			//
+				context,		//
+				drawingLine,	// ctrl + drag로 그리고 있는 라인
+				firingLine,		// 공 발사를 위한 red 라인
+				lines = [],		// 모든 라인 객체 배열
+				balls = [],		// 공(벡터) 객체 배열
+				ballRadius = 5,	// 공 반지름
+				ballStyle = "#ff0000",	// 공 색깔
+				_360radian = 2 * Math.PI,	// 360 라디언 상수
+				G = 0.35,	// 중력 가속도 값
+				friction = 0.90;	// 바운드 마찰력 
 
 			function init()
 			{
@@ -147,11 +147,7 @@
 				})();
 			};
 
-			function onResize(e)
-			{
-				canvas.width = document.body.clientWidth;
-				canvas.height = document.body.clientHeight;
-			};
+			
 
 			function pushRandomLines( len )
 			{
@@ -210,6 +206,9 @@
 				};
 			};
 
+			/**
+			* a -> b로 움직이는 물체와 lines 객체간의 충돌 체크 
+			*/
 			function checkCollision( a, b )
 			{
 				var l, hitPoints = [], p, min = 0xffffff, minP;
@@ -218,6 +217,7 @@
 				{
 					l = lines[i];
 
+					//사각형 체크로 빠른 검사
 					if( !hitTestRect( a, b, l.a, l.b ) ) continue;
 					
 					p = detectSegment( a, b, l.a, l.b );
@@ -235,6 +235,55 @@
 
 				return [ minP, line ];
 			};
+
+			/**
+			* 성능을 위해 두 점의 사각형부터 충돌 체크
+			*/
+			function hitTestRect( a, b, c, d )
+			{
+				var rectA = getRect( a, b ),
+					rectB = getRect( c, d );
+
+				if( rectA.left > rectB.right || 
+					rectA.right < rectB.left || 
+					rectA.top > rectB.bottom ||
+					rectA.bottom < rectB.top ) return false;
+
+				return true;
+			};
+
+			/**
+			* 두 점이 차지하는 사각형 범위를 반환
+			*/
+			function getRect( a, b )
+			{
+				var r = { left: 0, right: 0, top: 0, bottom: 0 };
+
+				if( a.x < b.x )
+				{
+					r.left = a.x;
+					r.right = b.x;
+				}
+				else
+				{
+					r.left = b.x;
+					r.right = a.x;
+				}
+
+				if( a.y < b.y )
+				{
+					r.top = a.y;
+					r.bottom = b.y;
+				}
+				else
+				{
+					r.top = b.y;
+					r.bottom = a.y;	
+				}
+
+				return r;
+			};
+
 
 			/**
 			* va -> vb, vc -> vd의 두개 선분 교차점 검색
@@ -266,6 +315,9 @@
 			};
 
 
+			/**
+			* 충돌면의 반사 벡터 반환
+			*/
 			function getReflectionVector( incidentVec, collisionPlane )
 			{
 				var sub =  collisionPlane.b.sub( collisionPlane.a ),
@@ -277,61 +329,22 @@
 				return incidentVec.sub( reflect );
 			};
 
-			function hitTestRect( a, b, c, d )
-			{
-				var rectA = getRect( a, b ),
-					rectB = getRect( c, d );
-
-				if( rectA.left > rectB.right || 
-					rectA.right < rectB.left || 
-					rectA.top > rectB.bottom ||
-					rectA.bottom < rectB.top ) return false;
-
-				return true;
-			};
-
-			function getRect( a, b )
-			{
-				var r = { left: 0, right: 0, top: 0, bottom: 0 };
-
-				if( a.x < b.x )
-				{
-					r.left = a.x;
-					r.right = b.x;
-				}
-				else
-				{
-					r.left = b.x;
-					r.right = a.x;
-				}
-
-				if( a.y < b.y )
-				{
-					r.top = a.y;
-					r.bottom = b.y;
-				}
-				else
-				{
-					r.top = b.y;
-					r.bottom = a.y;	
-				}
-
-				return r;
-			};
 
 			function fire( vec )
 			{
 				var ball = new Vector2D( vec.a.x, vec.a.y );
 
-				ball.v = vec.a.sub( vec.b ).scale( 0.1 );
+				ball.v = vec.a.sub( vec.b ).scale( 0.14 );
 
 				balls.push( ball );
 			};
 
 
-
-
-
+			/*******************************************************
+			*
+			*	Rendering
+			*
+			********************************************************/
 
 
 			function draw()
@@ -381,7 +394,17 @@
 
 
 
-			
+			/*******************************************************
+			*
+			*	EventListeners
+			*
+			********************************************************/
+
+			function onResize(e)
+			{
+				canvas.width = document.body.clientWidth;
+				canvas.height = document.body.clientHeight;
+			};
 
 
 			function onTouch( e )
