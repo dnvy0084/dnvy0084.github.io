@@ -7,7 +7,7 @@ categories: update
 
 # Grunt
 
-Grunt는 **"a task-based command line build tool for JavaScript projects"** 입니다. javascript 프로젝트 관리를 위해 이것저것 플러그인도 많고 쓰면 엄청 편하다(하지만 command line이니 감수해야되) 라고 하는데, concat과 uglify 플러그인만 사용해도 충분한것 같습니다. 두개만 사용할 수 있도록 기본 세팅 정도만 포스팅 하겠습니다. windows 기반입니다. 
+Grunt는 **"a task-based command line build tool for JavaScript projects"** 입니다. javascript 프로젝트 관리툴로 이것저것 유용한 플러그인도 많고 쓰면 엄청 편하다(하지만 command line이니 감수해야되) 라고 하는데, concat과 uglify 플러그인만 사용해도 충분한것 같습니다. 두개만 사용할 수 있도록 기본 세팅 정도만 포스팅 하겠습니다. windows 기반입니다. 
 
 * 전역 설정
 
