@@ -21,12 +21,15 @@ categories: update
 
 ![alt text][2]
 
-만약 그림처럼 $\vec{N}$을 알 수 있어서, $\vec{A}$에 $\vec{N}$을 두번 빼준다면 $\vec{R}$을 얻을 수 있을것 같은데요. 식으로 쓰면 $\vec{R} = \vec{A} - 2 \cdot \vec{N}$ 정도가 되겠네요. 여기서 $\vec{N}$은 반사된 벽을 $90$도 돌려서 각도를 구하고, $\vec{A}$를 $\vec{N}$축에 내적하여 길이를 구할 수 있습니다. 
+만약 그림처럼 $\vec{N}$을 알 수 있어서, $\vec{A}$에 $\vec{N}$을 두번 빼준다면 $\vec{R}$을 얻을 수 있을것 같은데요. 식으로 표현하면 $\vec{R} = \vec{A} - 2 \cdot \vec{N}$ 가 되겠네요. 여기서 $\vec{N}$은 반사된 벽을 $90$도 돌려서 각도를 구하고, $\vec{A}$를 $\vec{N}$축에 내적하여 길이를 구할 수 있습니다. (3D라면 반사된 면을 이루는 두변을 외적하여 구할 수 있습니다.
+
+벡터 $(x,y)$를 $\theta$ 만큼 돌리려면 ![alt text][3] 를 곱해주면 되는데요, ${\pi \over 2 }$(90도)
 
 
 [Canvas example][6]
 ======
-<iframe width="100%" height="500" src="http://dnvy0084.github.io/example/vector-reflection.html" frameborder="0" allowfullscreen></iframe>
+
+<iframe width="100%" height="400" src="http://dnvy0084.github.io/example/vector-reflection.html" frameborder="0" allowfullscreen></iframe>
 
 [*소스보기*][7]
 
@@ -34,5 +37,6 @@ categories: update
 
 [1]: /raw/rvec01.jpg "Vector"
 [2]: /raw/rvec02.jpg "Vector"
+[3]: http://chart.apis.google.com/chart?cht=tx&chl=%5Cbegin%7Bbmatrix%7D%5Ccos%20%5Ctheta%20-%5Csin%20%5Ctheta%20%5C%5C%20%5Csin%20%5Ctheta%20%5Ccos%20%5Ctheta%20%5Cend%7Bbmatrix%7D%20%5Ccdot%20%5Cbegin%7Bbmatrix%7D%20x%20%5C%5C%20y%20%5Cend%7Bbmatrix%7D "rotate"
 [6]: {{ site.url }}example/vector-reflection.html
 [7]: https://github.com/dnvy0084/math/blob/master/vector-reflection/vector-reflection.html
