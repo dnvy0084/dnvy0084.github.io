@@ -31,7 +31,7 @@ Grunt는 **"a task-based command line build tool for JavaScript projects"** 입�
 
 * 개별 프로젝트 
 	
-	Grunt를 사용할 프로젝트 폴더에서 `npm init` 을 입력하면 패키지 세팅에 관한 세부 항목들을 설정할 수 있는데요, 그냥 엔터로 넘겨도 상관없습니다. 
+	Grunt를 사용할 프로젝트 폴더에서 `npm init` 을 입력하면 패키지 세팅에 관한` 세부 항목들을 설정할 수 있는데요, 그냥 엔터로 넘겨도 상관없습니다. 
 	
 	![alt text][1]
 	
