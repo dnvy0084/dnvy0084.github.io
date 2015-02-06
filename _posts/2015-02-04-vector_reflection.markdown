@@ -19,7 +19,7 @@ categories: update
 
 만약 그림처럼 $\vec{N}$을 알 수 있어서, $\vec{A}$에 $\vec{N}$을 두번 빼준다면 $\vec{R}$을 얻을 수 있을것 같은데요. 식으로 표현하면 $\vec{R} = \vec{A} - 2 \cdot \vec{N}$ 가 되겠네요. 
 
-그림으로 봐도 $\vec{N}$은 반사된 벽에 수직선인것 같은데요, 벽을 90도 돌리면 될것 같습니다. 우선 면의 끝 점 $(x1,y1)$에서 시작 점 $(x0,y0)$를 빼 벡터 $(x',y')$으로 만들고, $\theta$ 만큼 돌리기 위해 ![alt text][3] 를 곱해주면 되는데요, 90도(${\pi \over 2 }$)를 돌려야 하니 $\cos {\pi \over 2} = 0, \sin {\pi \over 2} = 1$ 이 되서 ![alt text][4]가 되고, 풀어보면 $(-y, x)$가 됩니다. 이렇게 수직인 벡터를 법선 벡터( normal vector )라고 합니다.
+그림으로 봐도 $\vec{N}$은 반사된 벽에 수직선인것 같은데요, 벽을 90도 돌리면 될것 같습니다. 우선 벽의 끝 점 $(x1,y1)$에서 시작 점 $(x0,y0)$를 빼 벡터 $(x',y')$으로 만들고, $\theta$ 만큼 돌리기 위해 ![alt text][3] 를 곱해주면 되는데요, 90도(${\pi \over 2 }$)를 돌려야 하니 $\cos {\pi \over 2} = 0, \sin {\pi \over 2} = 1$ 이 되서 ![alt text][4]가 되고, 풀어보면 $(-y, x)$가 됩니다. 이렇게 수직인 벡터를 법선 벡터( normal vector )라고 합니다.
 
 
 ```javascript
@@ -35,7 +35,7 @@ Vector2D.prototype.sub = function( v )
 // 노말( 법선 ) 벡터 구하기
 Vector2D.prototype.normal = function()
 {
-	return new Vector2D( -y, x );
+	return new Vector2D( -this.y, this.x );
 }
 ```
 
