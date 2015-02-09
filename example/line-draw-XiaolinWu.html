@@ -1,0 +1,495 @@
+<html>
+<head>
+	<title>bresenham line draw algorithm example</title>
+	<style type="text/css">
+		body{ margin: 0; }
+		canvas{ background-color: #cdcdcd; }
+	</style>
+
+	<script type="text/javascript">
+
+		function Vector2D( x, y )
+		{
+			this.x = x || 0;
+			this.y = y || 0;
+		};
+
+		Vector2D.prototype = 
+		{
+			//더하기
+			add: function( v )
+			{
+				return new Vector2D(
+					this.x + v.x,
+					this.y + v.y
+				);
+			},
+
+			//빼기
+			sub: function( v )
+			{
+				return new Vector2D(
+					this.x - v.x,
+					this.y - v.y
+				);
+			},
+
+			// 내적
+			dot: function( v )
+			{
+				return this.x * v.x + this.y * v.y;
+			},
+
+			// 스칼라 곱
+			scale: function( len )
+			{
+				this.x *= len;
+				this.y *= len;
+
+				return this;
+			},
+
+			// 길이
+			length: function()
+			{
+				return Math.sqrt( this.x * this.x + this.y * this.y );
+			},
+
+			// 제곱근 계산 전 길이 - 길이 비교만 할 경우 제곱근 계산이 필요 없음. 
+			lengthNonSqrt: function()
+			{
+				return this.x * this.x + this.y * this.y;
+			},
+
+			// 정규화
+			normalize: function()
+			{
+				var len = this.length();
+
+				return new Vector2D(
+					this.x / len, 
+					this.y / len
+				);
+			},
+
+			// 법선 벡터
+			normal: function( ccw )
+			{
+				if( ccw ) 
+					return new Vector2D( this.y, -this.x );
+
+				return new Vector2D( -this.y, this.x );
+			},
+
+			clone: function()
+			{
+				return new Vector2D( this.x, this.y );	
+			},
+
+			// 좌표 출력
+			toString: function()
+			{
+				function _f3( f ) 
+				{
+					return parseInt( f * 1e3 ) / 1e3;
+				}
+
+				return "(" + _f3( this.x ) + "," + _f3( this.y ) + ")"
+			}
+		};
+
+
+		/**
+		*	라인 a 벡터 -> b 벡터로 가는 라인 클래스  
+		*/
+		function Line( a, b, thickness, color )
+		{
+			this.a = a || new Vector2D();
+			this.b = b || new Vector2D();
+
+			this.thickness = thickness || 1;
+			this.color = color || "#000000";
+		};
+	
+	</script>
+
+	<!-- Pixelate Class -->
+	<script type="text/javascript"> 
+
+		/**
+		* colorBuffer로 현재 픽셀 값을 저장하여 변경된 픽셀만 render 이벤트 발생. 
+		*/
+		function Pixelate( col, row, renderCallback )
+		{
+			this.col = col;
+			this.row = row;
+			this.render = renderCallback;
+
+			this.colorBuffer = [];
+		};
+
+		Pixelate.prototype = 
+		{
+			draw: function( buffer )
+			{
+				for( var i = 0, n = buffer.length; i < n; i++ )
+				{
+					if( typeof buffer === "undefined" || 
+						buffer[i] === this.colorBuffer[i] ) continue;
+
+					this.colorBuffer[i] = buffer[i]; 
+
+					this.render( i % this.col, parseInt( i / this.col ), this.colorBuffer[i] );
+				}
+			},
+
+			clearCache: function()
+			{
+				this.colorBuffer = [];
+			}
+		};
+	</script>
+
+	<!-- Line Draw Methods -->
+	<script type="text/javascript">
+
+		function frac( f )
+		{
+			return f - parseInt( f );
+		}
+
+		function lineToXiaolinWu( ax, ay, bx, by )
+		{
+			for( var i = 0, n = arguments.length; i < n; i++ )
+			{
+				arguments[i] = parseInt( arguments[i] );
+			}
+
+			var dx = Math.abs( bx - ax ),
+				dy = Math.abs( by - ay ),
+				m, x = ax, y = ay, t, di, dj,
+				buf = [], f;
+
+			if( dx > dy )
+			{
+				di = bx > ax ? +1 : -1;
+				m = by > ay ? dy / dx : -( dy / dx );
+				t = bx + di;
+
+				for( ; x != t; x += di )
+				{
+					f = frac( y );
+
+					buf.push( x, Math.floor( y ) );
+					buf.push( 1 - f );
+					buf.push( x, Math.ceil( y ) );
+					buf.push( f );
+
+					y += m;
+				}	
+			}
+			else
+			{
+				m = bx > ax ? +dx / dy : -( dx / dy );
+				di = by > ay ? +1 : -1;
+				t = by + di;
+
+				for( ; y != t; y += di )
+				{
+					f = frac( x );
+
+					buf.push( Math.floor( x ), y );
+					buf.push( 1 - f );
+					buf.push( Math.ceil( x ), y )
+					buf.push( f );
+
+					x += m;
+				}
+			}
+
+			return buf;
+		};
+
+	</script>
+
+	<!-- Main Documentaion -->
+	<script type="text/javascript">
+		(function (){
+			
+			var canvas,							// canvas element
+				context,						// CanvasRenderingContext2D
+				scene,							// Pixelate instance
+				colorBuffer,					// pixel data cache
+				pixelWidth = 10,				// 개별 픽셀 크기
+				pixelHeight = 10,				// 개별 픽셀 크기
+				backgroundColor = "#6d6d6d",	// 배경 픽셀값 
+				lines = [],
+				drawingLine,
+				start = new Vector2D(),
+				lineToFunc = lineToXiaolinWu; 	// line drawing function
+
+			/**
+			* window.onload 
+			*/
+			function init()
+			{
+				canvas = document.getElementById( "canvas" );
+				context = canvas.getContext( "2d" );
+				colorBuffer = [];
+
+				scene = new Pixelate( 10, 10, onRender.bind( this ) );
+
+				onResize( null );
+
+				(function render(){
+
+					draw();
+					requestAnimationFrame( render );
+
+				})();
+
+				canvas.addEventListener( "mousedown", onDown );
+				canvas.addEventListener( "mouseup", onUp );
+				canvas.addEventListener( "touchstart", onDown );
+				canvas.addEventListener( "touchend", onUp );
+
+				document.body.addEventListener( "keyup", onKeyUp );
+			};
+
+
+			/**
+			* window.onresize
+			*  - 전체 캔버스를 다시 그려줌.  
+			*/
+			function onResize( e )
+			{
+				canvas.width = document.body.clientWidth;
+				canvas.height = document.body.clientHeight;
+
+				scene.col = parseInt( canvas.width / pixelWidth + 0.9 );
+				scene.row = parseInt( canvas.height / pixelHeight + 0.9 );
+
+				scene.clearCache();
+
+				draw();
+			};
+
+			/**
+			* colorBuffer를 Pixelate로 전달 draw 호출. 
+			*/
+			function draw()
+			{
+				clear();
+
+				for( var i = 0, n = lines.length; i < n; i++ )
+				{
+					var l = lines[i];
+
+					drawLine( l.a.x, l.a.y, l.b.x, l.b.y, "#0000ff" );
+				}
+
+				scene.draw( colorBuffer );
+			};
+
+			/**
+			* colorBuffer에 (A->B)line을 그려줌. 
+			*/
+			function drawLine( ax, ay, bx, by, color )
+			{
+				for( var i = 0, n = 4; i < n; i++ )
+				{
+					if( i % 2 )	arguments[i] = arguments[i] / pixelHeight;
+					else 		arguments[i] = arguments[i] / pixelWidth;
+				}
+
+				var	buf = lineToFunc( ax, ay, bx, by ),
+					index, cA, cB, alpha, r, g, b;
+
+				for( var i = 0, n = buf.length; i < n; i += 3 )
+				{
+					index = buf[i+1] * scene.col + buf[i];
+
+					cA = hexToDec( colorBuffer[ index ] ) || backgroundColor;
+					cB = hexToDec( color );
+
+					alpha = buf[ i + 2 ];
+
+					r = parseInt( mix( cA >> 16 & 0xff, cB >> 16 & 0xff, alpha ) );
+					g = parseInt( mix( cA >> 8 & 0xff, cB >> 8 & 0xff, alpha ) );
+					b = parseInt( mix( cA & 0xff, cB & 0xff, alpha ) );
+
+					colorBuffer[ index ] = "#" + zfill( (r << 16 | g << 8 | b).toString(16), 6 );
+				}
+			};
+
+			function getColorWithBrightness( color, brightness )
+			{
+				color = hexToDec( color );
+
+				var r = color >> 16 & 0xff,
+					g = color >> 8 & 0xff,
+					b = color & 0xff;
+
+				var t = 1 - brightness;
+
+				r = parseInt( r + t * ( 255 - r ) );
+				g = parseInt( g + t * ( 255 - g ) );
+				b = parseInt( b + t * ( 255 - b ) );
+
+				return "#" + zfill( r.toString(16) ) + zfill( g.toString(16) ) + zfill( b.toString(16) );
+			};
+
+			function mix( a, b, t )
+			{
+				return a + t * ( b - a );
+			};
+
+			function zfill( n, d )
+			{
+				d = d || 2;
+
+				for( var i = n.length; i < d; i++ )
+				{
+					n = "0" + n;
+				}
+
+				return n;
+			};
+
+			function hexToDec( hex )
+			{
+				var match = hex.match( /[\da-fA-F]+/g );
+
+				if( match.length == 0 ) return null;
+
+				return parseInt( match[0], 16 );
+			};
+
+			/**
+			* a 포인트는 0xff, b 포인트는 0xff00 으로 표시 
+			*/
+			function drawPoints()
+			{
+				var x, y,
+					style = [ "#0000ff", "#00ff00" ];
+
+				for( var i = 0; i < arguments.length; i++ )
+				{
+					x = parseInt( arguments[i].x / pixelWidth );
+					y = parseInt( arguments[i].y / pixelHeight );
+
+					if( typeof arguments[i].color !== "undefined" )
+					{
+						colorBuffer[ y * scene.col + x ] = arguments[i].color;
+					}
+					else
+					{
+						colorBuffer[ y * scene.col + x ] = style[ i % style.length ];
+					}
+				}
+			};
+
+			/**
+			* 픽셀 캐쉬를 모두 배경 픽셀로 교체 
+			*/
+			function clear()
+			{
+				for( var i = 0, n = scene.col * scene.row; i < n; i++ )
+				{
+					if( colorBuffer[i] !== backgroundColor )
+						colorBuffer[i] = backgroundColor;
+				};
+			};
+
+
+			/**
+			* Pixelate.render
+			*  - 개별 픽셀 렌더링 이벤트
+			*/
+			function onRender( x, y, data )
+			{
+				if( x >= scene.col || y >= scene.row ) return;
+
+				x *= pixelWidth;
+				y *= pixelHeight;
+
+				context.clearRect( x, y, pixelWidth, pixelHeight );
+				context.save();
+
+					context.setTransform( 1,0,0,1, x + 1, y + 1 );
+					context.beginPath();
+					context.rect( 0, 0, pixelWidth - 1, pixelHeight - 1 );
+					context.fillStyle = data;
+					context.fill();
+
+				context.restore();
+			};
+
+
+
+			function onDown(e)
+			{
+				e.preventDefault();
+
+				if( e.type == "touchstart" && e.changedTouches.length )
+				{
+					e = e.changedTouches[0];
+				}
+
+				canvas.addEventListener( "mousemove", onMove );	
+
+				start.x = e.clientX;
+				start.y = e.clientY;
+
+				drawingLine = new Line( start.clone(), start.clone() );
+				lines.push( drawingLine );
+			};
+
+			function onUp(e)
+			{
+				canvas.removeEventListener( "mousemove", onMove );
+
+				drawingLine = null;
+			};
+
+			function onMove(e)
+			{
+				// drawingLine = new Line( 
+				// 	start.clone(),
+				// 	new Vector2D( e.clientX, e.clientY )
+				// );
+
+				// lines.push( drawingLine );
+
+				// start.x = e.clientX;
+				// start.y = e.clientY;
+
+				if( e.type == "touchmove" && e.changedTouches.length )
+					e = e.changedTouches[0];
+
+				drawingLine.b.x = e.clientX;
+				drawingLine.b.y = e.clientY;
+			};
+
+			function onKeyUp(e)
+			{
+				switch( e.keyCode )
+				{
+					case 8: //back space
+						lines.pop();
+						break;
+				}
+			};
+
+			window.onload = init;
+			window.onresize = onResize;
+
+		})();
+	</script>
+</head>
+<body>
+	<div class="wrapper">
+		<canvas id="canvas"></canvas>
+	</div>
+</body>
+</html>
