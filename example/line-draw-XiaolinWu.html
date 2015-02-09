@@ -437,6 +437,7 @@
 				}
 
 				canvas.addEventListener( "mousemove", onMove );	
+				canvas.addEventListener( "touchmove", onMove );
 
 				start.x = e.clientX;
 				start.y = e.clientY;
@@ -448,6 +449,7 @@
 			function onUp(e)
 			{
 				canvas.removeEventListener( "mousemove", onMove );
+				canvas.removeEventListener( "touchmove", onMove );
 
 				drawingLine = null;
 			};
