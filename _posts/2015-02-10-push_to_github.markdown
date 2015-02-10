@@ -131,7 +131,7 @@ module.exports = function(grunt) {
 
 
 [Grunt Build 포스트]: http://dnvy0084.github.io/update/2015/02/05/grunt_build.html
-[Shell plugin]: https://github.com/sindresorhus/grunt-shell
+[Grunt-Shell plugin]: https://github.com/sindresorhus/grunt-shell
 [child process]: http://nodejs.org/api/child_process.html
 [Grunt watch plugin]: https://github.com/gruntjs/grunt-contrib-watch
 
