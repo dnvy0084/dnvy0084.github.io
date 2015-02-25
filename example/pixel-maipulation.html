@@ -227,7 +227,7 @@
 
 			manipulation.contratstWithLookupTable = function( src, dest, value )
 			{
-				var table = this.contrast_lookup( value );
+				var table = manipulation.contrast_lookup( value );
 
 				for( var i = 0, l = src.length; i < l; i+=4 )
 				{
@@ -253,7 +253,7 @@
 
 			manipulation.grayscale = function( src, dest, value )
 			{
-				var r, g, b, v;
+				var r, g, b, v/*grayscale*/;
 
 				for( var i = 0, l = src.length; i < l; i+=4 )
 				{
@@ -310,7 +310,7 @@
 				for( var i = 0, l = src.length; i < l; i+=4 )
 				{
 					r = src[i], g = src[i+1], b = src[i+2];
-					v = 1.5 * r + 1.5 * g + 1.5 * b - 512;
+					v = Math.round(( 0.21 * r + 0.72 * g + 0.07 * b ) / 255) * 255;
 
 					dest[i  ] = r + value * ( v - r ),
 					dest[i+1] = g + value * ( v - g ),

@@ -59,12 +59,32 @@ for( var i = 0, l = imageData.data.length; i < l; i += 4 )
 ```
 위 처럼 for loop를 통해 전체 픽셀을 조작할 수 있습니다.
 
+아래는 ImageData를 이용한 pixel manipulation 예제 입니다. 이미지 위에서 죄우로 드래그하면 값을 변경 할 수 있습니다. 
+
 Brightness
 ===
 
 <div>
   <iframe width="100%" height="210" src="http://dnvy0084.github.io/example/pixel-maipulation.html?mode=brightness" frameborder="0" allowfullscreen></iframe>
 </div>
+
+```javascript
+/**
+* src: 소스 픽셀 버퍼( Uint8ClampedArray )
+* dest: 대상 픽셀 버퍼( Uint8ClampedArray )
+* value: 변경 값
+**/
+function manipulate( src, dest, value ) 
+{
+  for( var i = 0, l = src.length; i < l; i+=4 )
+  {
+    dest[i  ] = src[i  ] + value;
+    dest[i+1] = src[i+1] + value;
+    dest[i+2] = src[i+2] + value;
+  }
+}
+```
+밝기는 단순하게 $+, -$만 해주면 됩니다. clamped라 $(0<=pixel<=255)$를 체크할 필요도 없습니다. 
 
 Grayscale
 ===
@@ -73,12 +93,58 @@ Grayscale
   <iframe width="100%" height="210" src="http://dnvy0084.github.io/example/pixel-maipulation.html?mode=grayscale" frameborder="0" allowfullscreen></iframe>
 </div>
 
+```javascript
+/**
+* src: 소스 픽셀 버퍼( Uint8ClampedArray )
+* dest: 대상 픽셀 버퍼( Uint8ClampedArray )
+* value: 변경 값
+**/
+function manipulate( src, dest, value ) 
+{
+  var r, g, b, v; // r,g,b는 rgb값 v는 계산된 grayscale
+
+  for( var i = 0, l = src.length; i < l; i+=4 )
+  {
+    r = src[i], g = src[i+1], b = src[i+2];
+    v = 0.21 * r + 0.72 * g + 0.07 * b;
+
+    dest[i  ] = r + value * ( v - r ),
+    dest[i+1] = g + value * ( v - g ),
+    dest[i+2] = b + value * ( v - b );
+  }
+}
+```
+grayscale은 rgb 3개 원소의 평균값입니다. ${(r + g + b) \over 3}$로 구하면 될 것 같지만, 사람의 망막은 green을 느끼는 세포가 많다고 하네요. 그래서 각각 $r = 0.21, g = 0.72, b = 0.07$의 $factor$를 곱해주어 계산합니다. 
+
 Invert
 ===
 
 <div>
   <iframe width="100%" height="210" src="http://dnvy0084.github.io/example/pixel-maipulation.html?mode=invert" frameborder="0" allowfullscreen></iframe>
 </div>
+
+```javascript
+/**
+* src: 소스 픽셀 버퍼( Uint8ClampedArray )
+* dest: 대상 픽셀 버퍼( Uint8ClampedArray )
+* value: 변경 값
+**/
+function manipulate( src, dest, value ) 
+{
+  var r, g, b;
+
+  for( var i = 0, l = src.length; i < l; i+=4 )
+  {
+    r = src[i], g = src[i+1], b = src[i+2];
+
+    dest[i  ] = r + value * ( 255 - r - r ),
+    dest[i+1] = g + value * ( 255 - g - g ),
+    dest[i+2] = b + value * ( 255 - b - b );
+  }
+}
+```
+
+invert는 색을 반전 시킵니다. 간단하게 $255 - pixel$로 계산됩니다. 
 
 Black & White
 ===
@@ -87,12 +153,55 @@ Black & White
   <iframe width="100%" height="210" src="http://dnvy0084.github.io/example/pixel-maipulation.html?mode=bnw" frameborder="0" allowfullscreen></iframe>
 </div>
 
+```javascript
+/**
+* src: 소스 픽셀 버퍼( Uint8ClampedArray )
+* dest: 대상 픽셀 버퍼( Uint8ClampedArray )
+* value: 변경 값
+**/
+function manipulate( src, dest, value ) 
+{
+  var r, g, b, v;
+
+  for( var i = 0, l = src.length; i < l; i+=4 )
+  {
+    r = src[i], g = src[i+1], b = src[i+2];
+    v = Math.round(( 0.21 * r + 0.72 * g + 0.07 * b ) / 255) * 255;
+
+    dest[i  ] = r + value * ( v - r ),
+    dest[i+1] = g + value * ( v - g ),
+    dest[i+2] = b + value * ( v - b );
+  }
+}
+```
+
+흑백 이미지는 grayscale + contrast라고 생각할 수 있습니다. 픽셀의 grayscale값이 128 이상이면 255, 이하면 0 두가지 값만 가지도록 조작하면 됩니다. 
+
 Contrast
 ===
 
 <div>
-  <iframe width="100%" height="210" src="http://dnvy0084.github.io/example/pixel-maipulation.html?mode=contrast" frameborder="0" allowfullscreen></iframe>
+  <iframe width="100%" height="210" src="http://dnvy0084.github.io/example/pixel-maipulation.html?mode=contratstWithLookupTable" frameborder="0" allowfullscreen></iframe>
 </div>
+
+```javascript
+/**
+* src: 소스 픽셀 버퍼( Uint8ClampedArray )
+* dest: 대상 픽셀 버퍼( Uint8ClampedArray )
+* value: 변경 값
+**/
+function manipulate( src, dest, value )
+{
+  for( var i = 0, l = src.length; i < l; i+=4 )
+  {
+    dest[i  ] = value * src[i  ] + ( 1 - value ) * 128;
+    dest[i+1] = value * src[i+1] + ( 1 - value ) * 128;
+    dest[i+2] = value * src[i+2] + ( 1 - value ) * 128;
+  }
+}
+```
+
+contrast는 밝은 픽셀은 더 밝게, 어두운 픽셀은 더 어둡게하면 됩니다. 
 
 Saturation
 ===
@@ -100,6 +209,27 @@ Saturation
 <div>
   <iframe width="100%" height="210" src="http://dnvy0084.github.io/example/pixel-maipulation.html?mode=saturation" frameborder="0" allowfullscreen></iframe>
 </div>
+
+```javascript
+/**
+* src: 소스 픽셀 버퍼( Uint8ClampedArray )
+* dest: 대상 픽셀 버퍼( Uint8ClampedArray )
+* value: 변경 값
+**/
+function manipulate( src, dest, value ) 
+{
+  var r, g, b;
+
+  for( var i = 0, l = src.length; i < l; i+=4 )
+  {
+    r = src[i], g = src[i+1], b = src[i+2];
+
+    dest[i  ] = r + value * ( 255 - r - r ),
+    dest[i+1] = g + value * ( 255 - g - g ),
+    dest[i+2] = b + value * ( 255 - b - b );
+  }
+}
+```
 
 
 [가산혼합]: http://ko.wikipedia.org/wiki/RGB_%EA%B0%80%EC%82%B0%ED%98%BC%ED%95%A9
