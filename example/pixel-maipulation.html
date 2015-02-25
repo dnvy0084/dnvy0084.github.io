@@ -1,0 +1,418 @@
+<html>
+<head>
+	<title>Pixel Manipulation</title>
+</head>
+<script type="text/javascript">
+	
+	(function(){
+		
+		"use strict";
+
+		var context,				// canvas rendering context 2d
+			imageData,				// loaded image to ImageData Object;
+			aspectRatio = 2 / 7,	// canvas.height / canvas.width ratio;
+			startX,					// mouse down starting position.x
+			raw,					// original pixel data of imageData
+			mode,					// modify mode( brightness, contrast ... )
+			value = 0,				// current modify value
+			diffValue = 0,			// current add modify value when mouse move
+			isDown = false,			// mouse moving
+			manipulation = {},		// pixel manipulation methods, restrict 
+			manipulate,				// current maipualition method
+			restrict;				// current restirct;
+
+		Object.defineProperties( window, {
+			"valueText": {
+				get: function()
+				{
+					var n = value + diffValue;
+
+					return parseInt( n * 100 ) / 100;
+				}	
+			},
+
+			"diffValueText": {
+				get: function()
+				{
+					if( diffValue == 0 ) return "";
+
+					diffValue = parseInt( diffValue * 100 ) / 100;
+
+					return diffValue > 0 ? "+" + diffValue : diffValue;
+				}
+			}
+		});
+
+		function init()
+		{
+			context = document.getElementById( "canvas" ).getContext( "2d" );
+
+			initMaipulationProperties();
+			initEvents();
+
+			mode = getParameter( "mode" ) || "brightness";
+			manipulate = manipulation[ mode ];
+			restrict = manipulation[ mode + "Restrict" ];
+			value = restrict.value;
+
+			console.log( restrict );
+
+			onResize();
+		};
+
+		
+
+		function initEvents()
+		{
+			var canvas = context.canvas;
+
+			canvas.addEventListener( "mousedown", onDown );
+			canvas.addEventListener( "touchstart", onDown );
+
+			canvas.addEventListener( "mouseup", onUp );
+			canvas.addEventListener( "touchend", onUp );
+		};
+
+		function onDown(e)
+		{
+			isDown = true;
+
+			var touch = e;
+
+			if( e.type == "touchstart" ) 
+			{
+				e.preventDefault();
+				touch = e.changedTouches[0];
+			}
+
+			context.canvas.addEventListener( "mousemove", onMove );
+			context.canvas.addEventListener( "touchmove", onMove );
+
+			diffValue = 0;
+			startX = touch.clientX;
+
+			render();
+		};
+
+		function onMove( e )
+		{
+			var touch = e;
+
+			if( e.type == "touchmove" ) 
+			{
+				e.preventDefault();
+				touch = e.changedTouches[0];
+			}
+
+			diffValue = restrict.get( touch.clientX - startX, value );
+			render();
+		}
+
+		function onUp(e)
+		{
+			value += diffValue;
+			diffValue = 0;
+			isDown = false;
+
+			context.canvas.removeEventListener( "mousemove", onMove );
+			context.canvas.removeEventListener( "touchmove", onMove );		
+
+			render();
+		};
+
+		function render()
+		{
+			context.save();
+
+				context.clearRect( 0, 0, context.canvas.width, context.canvas.height );
+
+				manipulate( raw, imageData.data, value + diffValue );
+				context.putImageData( imageData, 0, 0 );
+
+				if( !isDown ) { context.restore(); return;}
+
+				context.shadowColor = "#333";
+				context.shadowBlur = 2;
+				context.shadowOffsetX = 2;
+				context.shadowOffsetY = 2;
+
+				context.font = "56px NanumGothic";
+				context.fillStyle = "#fff";
+
+				context.textBaseline = "middle";
+
+				var align, x;
+
+				if( diffValue < 0 )
+				{
+					align = "left",
+					x = 10;
+				}
+				else
+				{
+					align = "right",
+					x = context.canvas.width - 10;
+				}
+
+				context.textAlign = align;
+				context.fillText( diffValueText, x, context.canvas.height / 2 );
+
+				context.font = "30px NanumGothic";
+				context.textBaseline = "top";
+				context.textAlign = "center";
+				context.fillText( valueText, context.canvas.width / 2, 10 );
+
+			context.restore();
+		};
+
+
+
+		function initMaipulationProperties()
+		{
+			manipulation.brightness = function( src, dest, value )
+			{
+				for( var i = 0, l = src.length; i < l; i+=4 )
+				{
+					dest[i  ] = src[i  ] + value;
+					dest[i+1] = src[i+1] + value;
+					dest[i+2] = src[i+2] + value;
+				}
+			};
+
+			manipulation.brightnessRestrict = {
+				value: 0,
+				get: function( diff, value )
+				{
+					diff = parseInt( diff / 5 );
+
+					return Math.max( -255 - value, Math.min( 255 - value, diff ) );
+				}
+			};
+
+			manipulation.contrast_lookup = function( value )
+			{
+				var table = new Uint8ClampedArray( 256 );
+
+				for( var i = 0; i < 256; i++ )
+				{
+					table[i] = i * value + 128 * ( 1 - value );
+				}
+
+				return table;
+			};
+
+
+
+			manipulation.contrast = function( src, dest, value )
+			{
+				for( var i = 0, l = src.length; i < l; i+=4 )
+				{
+					dest[i  ] = value * src[i  ] + ( 1 - value ) * 128;
+					dest[i+1] = value * src[i+1] + ( 1 - value ) * 128;
+					dest[i+2] = value * src[i+2] + ( 1 - value ) * 128;
+				}
+			};
+
+			manipulation.contratstWithLookupTable = function( src, dest, value )
+			{
+				var table = this.contrast_lookup( value );
+
+				for( var i = 0, l = src.length; i < l; i+=4 )
+				{
+					dest[i  ] = table[ src[i  ] ];
+					dest[i+1] = table[ src[i+1] ];
+					dest[i+2] = table[ src[i+2] ];
+				}
+			};
+
+			manipulation.contrastRestrict = {
+				value: 1,
+				get: function( diff, value )
+				{
+					diff = diff / context.canvas.width;
+
+					return Math.max( 0.1 - value, Math.min( 2.5 - value, diff ) );
+				}
+			};
+
+			manipulation.contratstWithLookupTableRestrict = manipulation.contrastRestrict;
+
+
+
+			manipulation.grayscale = function( src, dest, value )
+			{
+				var r, g, b, v;
+
+				for( var i = 0, l = src.length; i < l; i+=4 )
+				{
+					r = src[i], g = src[i+1], b = src[i+2];
+					v = 0.21 * r + 0.72 * g + 0.07 * b;
+
+					dest[i  ] = r + value * ( v - r ),
+					dest[i+1] = g + value * ( v - g ),
+					dest[i+2] = b + value * ( v - b );
+				}
+			};
+
+			manipulation.grayscaleRestrict = {
+				value: 0,
+				get: function( diff, value )
+				{
+					diff = diff / context.canvas.width;
+
+					return Math.max( 0 - value, Math.min( 1 - value, diff ) );
+				}
+			}
+
+
+
+			manipulation.invert = function( src, dest, value )
+			{
+				var r, g, b, v;
+
+				for( var i = 0, l = src.length; i < l; i+=4 )
+				{
+					r = src[i], g = src[i+1], b = src[i+2];
+
+					dest[i  ] = r + value * ( 255 - r - r ),
+					dest[i+1] = g + value * ( 255 - g - g ),
+					dest[i+2] = b + value * ( 255 - b - b );
+				}
+			};
+
+			manipulation.invertRestrict = {
+				value: 0,
+				get: function( diff, value )
+				{
+					diff = diff / ( context.canvas.width / 3 );
+
+					return Math.max( 0 - value, Math.min( 1 - value, diff ) );
+				}
+			}
+
+
+			manipulation.bnw = function( src, dest, value )
+			{
+				var r, g, b, v;
+
+				for( var i = 0, l = src.length; i < l; i+=4 )
+				{
+					r = src[i], g = src[i+1], b = src[i+2];
+					v = 1.5 * r + 1.5 * g + 1.5 * b - 512;
+
+					dest[i  ] = r + value * ( v - r ),
+					dest[i+1] = g + value * ( v - g ),
+					dest[i+2] = b + value * ( v - b );
+				}
+			};
+
+			manipulation.bnwRestrict = {
+				value: 0,
+				get: function( diff, value )
+				{
+					diff = diff / ( context.canvas.width / 3 );
+
+					return Math.max( 0 - value, Math.min( 1 - value, diff ) );
+				}
+			}
+
+
+
+			manipulation.saturation = function( src, dest, value )
+			{
+				var r, g, b, v, _r, _g, _b,
+					sr = ( 1 - value ) * 0.21, 
+					sg = ( 1 - value ) * 0.72, 
+					sb = ( 1 - value ) * 0.07;
+
+				for( var i = 0, l = src.length; i < l; i+=4 )
+				{
+					r = src[i], g = src[i+1], b = src[i+2];
+
+					_r = r * ( sr + value ) + g * sg + b * sb;
+					_g = r * sr + g * ( sg + value ) + b * sb;
+					_b = r * sr + g * sg + b * ( sb + value );
+
+					dest[i  ] = _r;
+					dest[i+1] = _g;
+					dest[i+2] = _b;
+				}
+			};
+
+			manipulation.saturationRestrict = {
+				value: 1,
+				get: function( diff, value )
+				{
+					diff = diff / ( context.canvas.width / 4 );
+
+					return Math.max( 0 - value, Math.min( 5 - value, diff ) );
+				}
+			}
+		};
+
+
+
+		function getImageData( context, id )
+		{
+			var img = document.getElementById( id );
+
+			context.drawImage( img, 0, 0, context.canvas.width, context.canvas.height );
+
+			var imageData = context.getImageData( 0, 0, context.canvas.width, context.canvas.height );
+
+			context.clearRect( 0, 0, context.canvas.width, context.canvas.height );
+
+			return imageData;
+		};
+
+		function onResize(e)
+		{
+			context.canvas.width = 	document.body.clientWidth;
+			context.canvas.height = context.canvas.width * aspectRatio;
+
+			imageData = getImageData( context, "img" );
+			raw = new Uint8ClampedArray( imageData.data );
+
+			render();
+		};
+
+		function getParameter( key )
+		{
+			var url = document.URL,
+				r = new RegExp( key + "=[^&]+", "g" ),
+				a = url.match( r );
+
+			if( a.length <= 0 ) return null;
+
+			r = new RegExp( key + "=", "g" );
+
+			return a[0].replace( r, "" );
+		};
+
+		window.onload = init;
+		window.onresize = onResize;
+
+	})();
+
+</script>
+<style type="text/css">
+	body{
+		margin: 0px;
+	}
+
+	#canvas{
+		/* border: 1px solid #666; */
+	}
+
+	.hidden{
+		display: none;
+	}
+
+</style>
+<body>
+	<div class="wrapper">
+		<canvas id="canvas" width="800" height="300"></canvas>
+		<img src="raw/pmImg.jpg" alt="" class="hidden" id="img"/>
+	</div>
+</body>
+</html>
