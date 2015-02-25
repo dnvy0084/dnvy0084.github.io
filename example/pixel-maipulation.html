@@ -81,8 +81,8 @@
 			canvas.addEventListener( "mousedown", onDown );
 			canvas.addEventListener( "touchstart", onDown );
 
-			canvas.addEventListener( "mouseup", onUp );
-			canvas.addEventListener( "touchend", onUp );
+			body.addEventListener( "mouseup", onUp );
+			body.addEventListener( "touchend", onUp );
 		};
 
 		function onDown(e)
@@ -253,7 +253,7 @@
 
 			manipulation.grayscale = function( src, dest, value )
 			{
-				var r, g, b, v/*grayscale*/;
+				var r, g, b, v; // r,g,b는 rgb값 v는 계산된 grayscale
 
 				for( var i = 0, l = src.length; i < l; i+=4 )
 				{
