@@ -81,8 +81,8 @@
 			canvas.addEventListener( "mousedown", onDown );
 			canvas.addEventListener( "touchstart", onDown );
 
-			body.addEventListener( "mouseup", onUp );
-			body.addEventListener( "touchend", onUp );
+			document.body.addEventListener( "mouseup", onUp );
+			document.body.addEventListener( "touchend", onUp );
 		};
 
 		function onDown(e)
@@ -97,8 +97,8 @@
 				touch = e.changedTouches[0];
 			}
 
-			context.canvas.addEventListener( "mousemove", onMove );
-			context.canvas.addEventListener( "touchmove", onMove );
+			document.body.addEventListener( "mousemove", onMove );
+			document.body.addEventListener( "touchmove", onMove );
 
 			diffValue = 0;
 			startX = touch.clientX;
@@ -126,8 +126,8 @@
 			diffValue = 0;
 			isDown = false;
 
-			context.canvas.removeEventListener( "mousemove", onMove );
-			context.canvas.removeEventListener( "touchmove", onMove );		
+			document.body.removeEventListener( "mousemove", onMove );
+			document.body.removeEventListener( "touchmove", onMove );		
 
 			render();
 		};
