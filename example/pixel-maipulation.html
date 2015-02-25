@@ -332,7 +332,7 @@
 
 			manipulation.saturation = function( src, dest, value )
 			{
-				var r, g, b, v, _r, _g, _b,
+				var r, g, b,
 					sr = ( 1 - value ) * 0.21, 
 					sg = ( 1 - value ) * 0.72, 
 					sb = ( 1 - value ) * 0.07;
@@ -341,13 +341,9 @@
 				{
 					r = src[i], g = src[i+1], b = src[i+2];
 
-					_r = r * ( sr + value ) + g * sg + b * sb;
-					_g = r * sr + g * ( sg + value ) + b * sb;
-					_b = r * sr + g * sg + b * ( sb + value );
-
-					dest[i  ] = _r;
-					dest[i+1] = _g;
-					dest[i+2] = _b;
+					dest[i  ] = r * ( sr + value ) + g * sg + b * sb;
+					dest[i+1] = r * sr + g * ( sg + value ) + b * sb;
+					dest[i+2] = r * sr + g * sg + b * ( sb + value );
 				}
 			};
 

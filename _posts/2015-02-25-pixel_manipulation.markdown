@@ -175,7 +175,7 @@ function manipulate( src, dest, value )
 }
 ```
 
-흑백 이미지는 grayscale + contrast라고 생각할 수 있습니다. 픽셀의 grayscale값이 128 이상이면 255, 이하면 0 두가지 값만 가지도록 조작하면 됩니다. 
+흑백 이미지는 grayscale + contrast라고 생각할 수 있습니다. 픽셀의 grayscale값이 128 이상이면 255, 이하면 0 두가지 값만 가지도록 하면 됩니다. 
 
 Contrast
 ===
@@ -201,7 +201,18 @@ function manipulate( src, dest, value )
 }
 ```
 
-contrast는 밝은 픽셀은 더 밝게, 어두운 픽셀은 더 어둡게하면 됩니다. 
+contrast는 밝은 픽셀은 더 밝게, 어두운 픽셀은 더 어둡게하면 됩니다. $p = (r,g,b)$일 때, $p - 128$로 -128에서 128까지의 범위로 옮기고 $p\times contrast$를 하면 contrast가 2일 경우 -256 dptj 256까지 범위로 확장( scale )됩니다. 마지막으로 $p+128$ 해주면 원래 위치로 돌아오는데 0을 중점으로 확장했기 때문에 밝은 곳은 더 밝게, 어두운 곳은 더 어둡게 바뀝니다.
+
+$new p = contrast \times ( p - 128 ) + 128$
+
+$new p = contrast \times p - contrast \times 128 + 128$
+
+$new p = contrast \times p + 128 \times ( 1 - contrast )$
+
+로 위의 소스처럼 정리 할 수 있습니다. 이렇게 정리하는 이유는 여러개의 효과를 주기 위해서는 5x5 ColorMatrix를 사용해야 되는데, 첫번째 식은 matrix 곱으로 표현하기 힘들기 때문입니다. 
+
+$p = a \times x + b$ 형태라면 matrix 곱으로 표현할 수 있습니다. 
+
 
 Saturation
 ===
@@ -218,21 +229,29 @@ Saturation
 **/
 function manipulate( src, dest, value ) 
 {
-  var r, g, b;
+  var r, g, b,
+      sr = ( 1 - value ) * 0.21, 
+      sg = ( 1 - value ) * 0.72, 
+      sb = ( 1 - value ) * 0.07;
 
   for( var i = 0, l = src.length; i < l; i+=4 )
   {
     r = src[i], g = src[i+1], b = src[i+2];
 
-    dest[i  ] = r + value * ( 255 - r - r ),
-    dest[i+1] = g + value * ( 255 - g - g ),
-    dest[i+2] = b + value * ( 255 - b - b );
+    dest[i  ] = r * ( sr + value ) + g * sg + b * sb;
+    dest[i+1] = r * sr + g * ( sg + value ) + b * sb;
+    dest[i+2] = r * sr + g * sg + b * ( sb + value );
   }
 }
 ```
+
+saturation은 grayscale factor를 사용합니다. 다만 각 원소마다 해당하는 원소에( r일때 r, g일때 g ... ) value만큼 더하여 색상을 더 진하게 표현합니다. 
+
+[소스보기]
 
 
 [가산혼합]: http://ko.wikipedia.org/wiki/RGB_%EA%B0%80%EC%82%B0%ED%98%BC%ED%95%A9
 [빛의 삼원색]: http://ko.wikipedia.org/wiki/%EC%9B%90%EC%83%89
 [ImageData]: https://developer.mozilla.org/en-US/docs/Web/API/ImageData
 [TypedArray]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Typed_arrays
+[소스보기]: https://github.com/dnvy0084/dnvy0084.github.io/blob/master/example/pixel-maipulation.html
