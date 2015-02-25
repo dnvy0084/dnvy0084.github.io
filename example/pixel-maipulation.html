@@ -47,6 +47,20 @@
 		{
 			context = document.getElementById( "canvas" ).getContext( "2d" );
 
+			var img = document.getElementById( "img" );
+
+			if( img.complete )
+			{
+				onLoadComplete();
+			}
+			else
+			{
+				img.addEventListener( "load", onLoadComplete );
+			}
+		};
+
+		function onLoadComplete(e)
+		{
 			initMaipulationProperties();
 			initEvents();
 
@@ -54,8 +68,6 @@
 			manipulate = manipulation[ mode ];
 			restrict = manipulation[ mode + "Restrict" ];
 			value = restrict.value;
-
-			console.log( restrict );
 
 			onResize();
 		};
@@ -382,7 +394,7 @@
 				r = new RegExp( key + "=[^&]+", "g" ),
 				a = url.match( r );
 
-			if( a.length <= 0 ) return null;
+			if( a == null || a.length <= 0 ) return null;
 
 			r = new RegExp( key + "=", "g" );
 
@@ -412,7 +424,7 @@
 <body>
 	<div class="wrapper">
 		<canvas id="canvas" width="800" height="300"></canvas>
-		<img src="raw/pmImg.jpg" alt="" class="hidden" id="img"/>
+		<img src="raw/pmImg.jpg" alt="" class="hidden" id="img"></img>
 	</div>
 </body>
 </html>

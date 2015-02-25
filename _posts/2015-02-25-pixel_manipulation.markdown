@@ -62,32 +62,44 @@ for( var i = 0, l = imageData.data.length; i < l; i += 4 )
 Brightness
 ===
 
-<iframe width="100%" height="210" src="http://dnvy0084.github.io/example/pixel-maipulation.html?mode=brightness" frameborder="0" allowfullscreen></iframe>
+<div>
+  <iframe width="100%" height="210" src="http://dnvy0084.github.io/example/pixel-maipulation.html?mode=brightness" frameborder="0" allowfullscreen></iframe>
+</div>
 
 Grayscale
 ===
 
-<iframe width="100%" height="210" src="http://dnvy0084.github.io/example/pixel-maipulation.html?mode=grayscale" frameborder="0" allowfullscreen></iframe>
+<div>
+  <iframe width="100%" height="210" src="http://dnvy0084.github.io/example/pixel-maipulation.html?mode=grayscale" frameborder="0" allowfullscreen></iframe>
+</div>
 
 Invert
 ===
 
-<iframe width="100%" height="210" src="http://dnvy0084.github.io/example/pixel-maipulation.html?mode=invert" frameborder="0" allowfullscreen></iframe>
+<div>
+  <iframe width="100%" height="210" src="http://dnvy0084.github.io/example/pixel-maipulation.html?mode=invert" frameborder="0" allowfullscreen></iframe>
+</div>
 
 Black & White
 ===
 
-<iframe width="100%" height="210" src="http://dnvy0084.github.io/example/pixel-maipulation.html?mode=bnw" frameborder="0" allowfullscreen></iframe>
+<div>
+  <iframe width="100%" height="210" src="http://dnvy0084.github.io/example/pixel-maipulation.html?mode=bnw" frameborder="0" allowfullscreen></iframe>
+</div>
 
 Contrast
 ===
 
-<iframe width="100%" height="210" src="http://dnvy0084.github.io/example/pixel-maipulation.html?mode=contrast" frameborder="0" allowfullscreen></iframe>
+<div>
+  <iframe width="100%" height="210" src="http://dnvy0084.github.io/example/pixel-maipulation.html?mode=contrast" frameborder="0" allowfullscreen></iframe>
+</div>
 
 Saturation
 ===
 
-<iframe width="100%" height="210" src="http://dnvy0084.github.io/example/pixel-maipulation.html?mode=saturation" frameborder="0" allowfullscreen></iframe>
+<div>
+  <iframe width="100%" height="210" src="http://dnvy0084.github.io/example/pixel-maipulation.html?mode=saturation" frameborder="0" allowfullscreen></iframe>
+</div>
 
 
 [가산혼합]: http://ko.wikipedia.org/wiki/RGB_%EA%B0%80%EC%82%B0%ED%98%BC%ED%95%A9
