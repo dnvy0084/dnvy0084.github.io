@@ -201,28 +201,31 @@
 				}
 			};
 
-			manipulation.contrast_lookup = function( value )
-			{
-				var table = new Uint8ClampedArray( 256 );
-
-				for( var i = 0; i < 256; i++ )
-				{
-					table[i] = i * value + 128 * ( 1 - value );
-				}
-
-				return table;
-			};
-
 
 
 			manipulation.contrast = function( src, dest, value )
 			{
+				var t = ( 1 - value ) * 128;
+
 				for( var i = 0, l = src.length; i < l; i+=4 )
 				{
-					dest[i  ] = value * src[i  ] + ( 1 - value ) * 128;
-					dest[i+1] = value * src[i+1] + ( 1 - value ) * 128;
-					dest[i+2] = value * src[i+2] + ( 1 - value ) * 128;
+					dest[i  ] = value * src[i  ] + t;
+					dest[i+1] = value * src[i+1] + t;
+					dest[i+2] = value * src[i+2] + t;
 				}
+			};
+
+			manipulation.contrast_lookup = function( value )
+			{
+				var table = new Uint8ClampedArray( 256 ),
+					t = 128 * ( 1 - value );
+
+				for( var i = 0; i < 256; i++ )
+				{
+					table[i] = i * value + t;
+				}
+
+				return table;
 			};
 
 			manipulation.contratstWithLookupTable = function( src, dest, value )
@@ -280,15 +283,13 @@
 
 			manipulation.invert = function( src, dest, value )
 			{
-				var r, g, b, v;
+				var r, g, b, v = 255 * value, t = 1 - 2 * value;
 
 				for( var i = 0, l = src.length; i < l; i+=4 )
 				{
-					r = src[i], g = src[i+1], b = src[i+2];
-
-					dest[i  ] = r + value * ( 255 - r - r ),
-					dest[i+1] = g + value * ( 255 - g - g ),
-					dest[i+2] = b + value * ( 255 - b - b );
+					dest[i  ] = t * src[i  ] + v;
+					dest[i+1] = t * src[i+1] + v;
+					dest[i+2] = t * src[i+2] + v;
 				}
 			};
 
