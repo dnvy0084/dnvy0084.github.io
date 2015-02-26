@@ -175,7 +175,7 @@ function manipulate( src, dest, value )
 }
 ```
 
-다음과 같이 바꿀 수 있는데요, 연산이 조금 줄어들었습니다. for loop에서 식이 복잡하거나 길때는 전개했다가 다른 방식으로 풀어보는 습관을 들이는것도 괜찮습니다. 
+다음과 같이 바꿀 수 있는데요, 연산이 조금 줄어들었습니다. for loop에서 식이 복잡하거나 길때는 전개했다가 i값 증감과 상관없는 계산은 밖으로 빼는게 성능 최적화의 한 방법입니다. 
 
 Black & White
 ===
@@ -333,4 +333,5 @@ saturation은 grayscale factor를 사용합니다. 다만 각 원소마다 해�
 [빛의 삼원색]: http://ko.wikipedia.org/wiki/%EC%9B%90%EC%83%89
 [ImageData]: https://developer.mozilla.org/en-US/docs/Web/API/ImageData
 [TypedArray]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Typed_arrays
+[Uint8ClampedArray]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8ClampedArray
 [소스보기]: https://github.com/dnvy0084/dnvy0084.github.io/blob/master/example/pixel-maipulation.html
