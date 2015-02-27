@@ -72,7 +72,10 @@ $b = brightness$
 $=$
 <img src="http://chart.apis.google.com/chart?cht=tx&chl=%5Cbegin%7Bbmatrix%7D%0AR%27%20%5C%5C%0AG%27%20%5C%5C%0AB%27%20%5C%5C%0AA%27%20%5C%5C%0A1%20%0A%5Cend%7B%7D"/>
 
-이때 b값을 각각 따로 주면 선택한 색상만 밝기 조절도 가능합니다. 
+이때 b값을 각각 따로 주면 선택한 색상만 밝기 조절도 가능합니다. Red 값만 살펴보면
+
+$R' = 1 \times R + 0 \times G + 0 \times B + 1 \times A + 1 \times b$
+가 되어 결과적으로 $R + b$만 남게 됩니다. 
 
 
 Grayscale
