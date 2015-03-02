@@ -1,0 +1,172 @@
+<html>
+<head>
+	<title>color matrix</title>
+</head>
+<script src="https://code.createjs.com/createjs-2014.12.12.min.js"></script>
+<script type="text/javascript" src="http://dnvy0084.github.io/l2/js/stats.min.js"></script>
+<script type="text/javascript" src="http://10.67.16.21:8000/build/bitmap.js"></script>
+<script type="text/javascript">
+	(function(){
+
+		"use strict";
+		
+		var context,
+			buttons,
+			bmpd,
+			stage;
+
+		//const
+		var footerHeight = 100;
+
+		function init()
+		{
+			context = document.getElementById( "canvas" ).getContext( "2d" );
+			stage = new createjs.Stage( "canvas" );
+
+			buttons = layout();
+			addImage( "raw/sanche.jpg" );
+			onResize();
+
+			var stats = addStats();
+
+			createjs.Ticker.setFPS(60);
+			createjs.Ticker.addEventListener( "tick", function(e){
+
+				stats.begin();
+
+				stage.update();
+				drawFooter();
+
+				stats.end();
+			});
+		};
+
+		function layout()
+		{
+			var sheetInfo = {
+				images: [ "raw/colorMatrix_button_sheet.gif" ],
+				frames: [
+					[0,0,112,96],
+					[112,0,112,96],
+					[0,96,112,96],
+					[112,96,112,96]
+				]
+			},
+				buttons = [],
+
+				sheet = new createjs.SpriteSheet( sheetInfo ), 
+				names = [ "sample", "load" ],
+				button;
+
+
+			for( var i = 0; i < 2; i++ )
+			{
+				button = new createjs.Sprite( sheet );
+				button.skinIndex = [ i * 2, i * 2 + 1 ];
+				button.name = names[i];
+
+				stage.addChild( button );
+				buttons.push( button );
+
+				button.gotoAndStop( button.skinIndex[0] );
+
+				button.addEventListener( "mousedown", function(e){
+
+					var currentButton = e.currentTarget;
+
+					currentButton.gotoAndStop( currentButton.skinIndex[1] );
+
+					context.canvas.addEventListener( "mouseup", function(e){
+
+						currentButton.gotoAndStop( currentButton.skinIndex[0] );
+						context.canvas.removeEventListener( "mouseup", e.callee );
+					});
+				});
+			}
+			
+			return buttons;
+		};
+
+		function drawFooter()
+		{
+			context.save();
+
+				context.strokeStyle = "#7d7d7d";
+				context.beginPath();
+				context.moveTo( 0, context.canvas.height - footerHeight );
+				context.lineTo( context.canvas.width, context.canvas.height - footerHeight );
+				context.stroke();
+
+			context.restore();
+		};
+
+		function addImage( url )
+		{
+			createjs.BitmapData.getImageData( url, function( imageData ){
+
+				bmpd = new createjs.BitmapData( imageData );
+
+				stage.addChild( bmpd );
+
+				onResize();
+			});
+		};
+
+		function onResize(e)
+		{
+			context.canvas.width = document.body.clientWidth;
+			context.canvas.height = document.body.clientHeight;
+
+			var button, rect, spaceX = 50;
+
+			for( var i = 0, l = buttons.length; i < l; i++ )
+			{
+				button = buttons[i];
+				rect = button.getBounds();
+
+				button.x = ( context.canvas.width - ( rect.width << 1 ) - spaceX ) / 2 + i * (rect.width+spaceX);
+				button.y = ( context.canvas.height - rect.height - 10 ) >> 1;
+			}
+
+			if( bmpd )
+			{
+				rect = bmpd.getBounds();
+
+				bmpd.x = ( context.canvas.width - rect.width ) / 2;
+				bmpd.y = ( context.canvas.height - footerHeight - rect.height ) / 2;
+			}
+		};
+
+		function addStats()
+		{
+			var stats = new Stats();
+
+			stats.setMode(0);
+			stats.domElement.style.position = "absolute"
+			stats.domElement.style.top = "0px";
+			stats.domElement.style.left = "0px";
+
+			document.body.appendChild( stats.domElement );
+
+			return stats;
+		};
+
+		window.onload = init;
+		window.onresize = onResize;
+
+	})();
+</script>
+<style type="text/css">
+	body{
+		margin: 0px;
+	}
+	canvas{
+		/* background-color: #f00; */
+	}
+</style>
+<body>
+	<div class="wrapper">
+		<canvas id="canvas"></canvas>
+	</div>
+</body>
+</html>

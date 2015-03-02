@@ -246,6 +246,88 @@ Saturation
 $=$
 <img src="http://chart.apis.google.com/chart?cht=tx&chl=%5Cbegin%7Bbmatrix%7D%0AR%27%20%5C%5C%0AG%27%20%5C%5C%0AB%27%20%5C%5C%0AA%27%20%5C%5C%0A1%20%0A%5Cend%7B%7D"/>
 
+
+Matrix multipliction
+===
+
+이렇게 여러개의 이미지 효과 행렬을 하나로 만들기 위해서는 행렬간의 곱을 할 수 있는 method가 필요합니다. 
+
+```javascript
+
+// constructor
+function Mat5( raw )
+{
+  this.raw = raw;
+}
+
+// raw array type const
+Mat5.MAT5_TYPE = Float32Array;
+
+// prototype
+var p = Mat5.prototype;
+
+// append A.append( B ) => A x B
+p.append = function( mat )
+{
+  var a = this.clone().raw,
+    b = mat.raw;
+
+  var a00 = a[0], a01 = a[5], a02 = a[10], a03 = a[15], a04 = a[20],
+    a10 = a[1], a11 = a[6], a12 = a[11], a13 = a[16], a14 = a[21],
+    a20 = a[2], a21 = a[7], a22 = a[12], a23 = a[17], a24 = a[22],
+    a30 = a[3], a31 = a[8], a32 = a[13], a33 = a[18], a34 = a[23],
+    a40 = a[4], a41 = a[9], a42 = a[14], a43 = a[19], a44 = a[24];
+
+  var b0, b1, b2, b3, b4, r = new Mat5.MAT5_TYPE( 25 );
+  
+  // B matrix의 열을 변수에 담아
+  b0 = b[0], b1 = b[1], b2 = b[2], b3 = b[3], b4 = b[4];
+
+  // A matrix의 행을 바꿔가며 곱. 
+  r[0] = a00 * b0 + a01 * b1 + a02 * b2 + a03 * b3 + a04 * b4;
+  r[1] = a10 * b0 + a11 * b1 + a12 * b2 + a13 * b3 + a14 * b4;
+  r[2] = a20 * b0 + a21 * b1 + a22 * b2 + a23 * b3 + a24 * b4;
+  r[3] = a30 * b0 + a31 * b1 + a32 * b2 + a33 * b3 + a34 * b4;
+  r[4] = a40 * b0 + a41 * b1 + a42 * b2 + a43 * b3 + a44 * b4;
+  
+  b0 = b[5], b1 = b[6], b2 = b[7], b3 = b[8], b4 = b[9];
+
+  r[5] = a00 * b0 + a01 * b1 + a02 * b2 + a03 * b3 + a04 * b4;
+  r[6] = a10 * b0 + a11 * b1 + a12 * b2 + a13 * b3 + a14 * b4;
+  r[7] = a20 * b0 + a21 * b1 + a22 * b2 + a23 * b3 + a24 * b4;
+  r[8] = a30 * b0 + a31 * b1 + a32 * b2 + a33 * b3 + a34 * b4;
+  r[9] = a40 * b0 + a41 * b1 + a42 * b2 + a43 * b3 + a44 * b4;
+  
+  b0 = b[10], b1 = b[11], b2 = b[12], b3 = b[13], b4 = b[14];
+
+  r[10] = a00 * b0 + a01 * b1 + a02 * b2 + a03 * b3 + a04 * b4;
+  r[11] = a10 * b0 + a11 * b1 + a12 * b2 + a13 * b3 + a14 * b4;
+  r[12] = a20 * b0 + a21 * b1 + a22 * b2 + a23 * b3 + a24 * b4;
+  r[13] = a30 * b0 + a31 * b1 + a32 * b2 + a33 * b3 + a34 * b4;
+  r[14] = a40 * b0 + a41 * b1 + a42 * b2 + a43 * b3 + a44 * b4;
+  
+  b0 = b[15], b1 = b[16], b2 = b[17], b3 = b[18], b4 = b[19];
+
+  r[15] = a00 * b0 + a01 * b1 + a02 * b2 + a03 * b3 + a04 * b4;
+  r[16] = a10 * b0 + a11 * b1 + a12 * b2 + a13 * b3 + a14 * b4;
+  r[17] = a20 * b0 + a21 * b1 + a22 * b2 + a23 * b3 + a24 * b4;
+  r[18] = a30 * b0 + a31 * b1 + a32 * b2 + a33 * b3 + a34 * b4;
+  r[19] = a40 * b0 + a41 * b1 + a42 * b2 + a43 * b3 + a44 * b4;
+  
+  b0 = b[20], b1 = b[21], b2 = b[22], b3 = b[23], b4 = b[24];
+
+  r[20] = a00 * b0 + a01 * b1 + a02 * b2 + a03 * b3 + a04 * b4;
+  r[21] = a10 * b0 + a11 * b1 + a12 * b2 + a13 * b3 + a14 * b4;
+  r[22] = a20 * b0 + a21 * b1 + a22 * b2 + a23 * b3 + a24 * b4;
+  r[23] = a30 * b0 + a31 * b1 + a32 * b2 + a33 * b3 + a34 * b4;
+  r[24] = a40 * b0 + a41 * b1 + a42 * b2 + a43 * b3 + a44 * b4;
+
+  return new Mat5( r );
+};
+```
+
+길고 복잡해 보이지만 A 행렬의 행과 B 행렬의 열을 순서대로 곱하고 더한 결과입니다. 
+
 -- 예제 작성 중 --
 
 
