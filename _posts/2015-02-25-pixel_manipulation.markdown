@@ -37,7 +37,7 @@ Canvas는 [ImageData]라는 객체를 이용해 픽셀 조작을 할 수 있는�
 
 js의 TypedArray중에는 Uint8ClampedArray와 함께 Uint8Array도 있습니다. 둘다 Uint8 <small>-부호없는 정수형 8비트 저장공간-</small> 타입만 저장 가능하며 8비트 보다 큰 값 257을 저장하면 Uint8Array는 1로 Uint8ClampedArray는 255로 저장됩니다. Uint8Array는 들어온 값의 마지막 8개 비트만 읽어서 저장하며 257은 이진수로 `1 0000 0001`이니 `0000 0001`로 저장되고, Uint8Clamped는 자동으로 clamp `Math.min( 0, Math.max( 255, 257 ) )` 됩니다.
 
-ImageData.data는 항상 픽셀 개수 * 4의 길이를 가지는 데요, 한개의 픽셀을 r, g, b, a 4개의 원소로 저장하고 있기 때문입니다. 그래서 위 처럼 색 변환에 비트연산을 사용할 필요 없이 
+ImageData.data는 항상 픽셀 개수 * 4의 길이를 가지는 데요, 한개의 픽셀을 r, g, b, a 4개의 원소로 저장하고 있기 때문입니다. 그래서 비트연산을 사용할 필요 없이 
 
 ```javascript
 for( var i = 0, l = imageData.data.length; i < l; i += 4 )
@@ -114,7 +114,7 @@ function manipulate( src, dest, value )
   }
 }
 ```
-grayscale은 rgb 3개 원소의 평균값입니다. ${(r + g + b) \over 3}$로 구하면 될 것 같지만, 사람의 망막은 green을 느끼는 세포가 많다고 하네요. 그래서 각각 $r = 0.21, g = 0.72, b = 0.07$의 $factor$를 곱해주어 계산합니다. 
+grayscale은 rgb 3개 원소의 평균값입니다. ${(r + g + b) \over 3}$로 구하면 될 것 같지만, 사람의 망막은 green을 느끼는 세포가 많다고 하네요. 그래서 각각 $r = 0.21, g = 0.72, b = 0.07$의 가중치를 곱해주어 계산합니다. 
 
 Invert
 ===
@@ -146,15 +146,15 @@ function manipulate( src, dest, value )
 
 invert는 색을 반전 시킵니다. 간단하게 $255 - pixel$로 계산됩니다. 다만 위 코드에서 
 
-$pixel = pixel + value * ( (255 - pixel) - pixel )$로 
+$pixel = pixel + value \times ( (255 - pixel) - pixel )$로 
 
-$p = a + t * ( b - a )$처럼 내분점( 무게중심 )을 이용하고 있는데요, 
+$p = a + t \times ( b - a )$처럼 무게중심(내분점)을 이용하고 있는데요, 
 
-$pixel = pixel + value * 255 - 2 * pixel * value$로 풀어서 
+$pixel = pixel + value \times 255 - value \times 2 \times pixel$로 풀어서 
 
-$pixel = pixel * ( 1 - 2 * value ) + 255 * value$ 정리하면 
+$pixel = pixel \times ( 1 - 2 \times value ) + 255 \times value$ 정리하면 
 
-$( 1 - 2 * value )$와 $255 * value$는 value가 매개변수이기 때문에 for loop 바깥에서 계산할 수 있습니다. 
+$( 1 - 2 \times value )$와 $255 \times value$는 i 증가와 상관없기 때문에 for loop 바깥에서 계산할 수 있습니다. 
 
 ```javascript
 /**
@@ -175,7 +175,7 @@ function manipulate( src, dest, value )
 }
 ```
 
-다음과 같이 바꿀 수 있는데요, 연산이 조금 줄어들었습니다. for loop에서 식이 복잡하거나 길때는 전개했다가 i값 증감과 상관없는 계산은 밖으로 빼는게 성능 최적화의 한 방법입니다. 
+다음과 같이 바꿀 수 있는데요, 연산이 조금 줄어들었습니다. for loop에서 식이 복잡하거나 길때는 전개했다가 i값 증감과 상관없는 계산을 밖으로 빼는게 성능 최적화의 한 방법입니다. 
 
 Black & White
 ===
@@ -208,7 +208,7 @@ function manipulate( src, dest, value )
 
 흑백 이미지는 grayscale + contrast라고 생각할 수 있습니다. 픽셀의 grayscale값이 128 이상이면 255, 이하면 0 두가지 값만 가지도록 하면 됩니다. 
 
-0~1로 만들어서 반올림한 후에 * 255로 0 or 255로 만들었는데요, 이럴때는 그냥 if문 쓰는게 훨씬 빠릅니다. 
+0~1로 만들어서 반올림한 후에 $\times 255$로 0 or 255로 만들었는데요, 이럴때는 그냥 if문 쓰는게 훨씬 빠릅니다. 
 
 ```javascript
 if( v < 128 ) v = 0
