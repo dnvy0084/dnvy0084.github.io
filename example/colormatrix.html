@@ -4,7 +4,7 @@
 </head>
 <script src="https://code.createjs.com/createjs-2014.12.12.min.js"></script>
 <script type="text/javascript" src="http://dnvy0084.github.io/l2/js/stats.min.js"></script>
-<script type="text/javascript" src="http://10.67.16.21:8000/build/bitmap.js"></script>
+<script type="text/javascript" src="https://raw.githubusercontent.com/dnvy0084/snapseed/master/build/bitmap.js"></script>
 
 <script type="text/javascript">
 	(function(){
@@ -245,6 +245,7 @@
 				onResize();
 
 				context.canvas.addEventListener( "mousedown", onDown );
+				context.canvas.addEventListener( "touchstart", onDown );
 			});
 		};
 
@@ -252,7 +253,12 @@
 
 		function onDown( e )
 		{
+			e.preventDefault();
+
 			if( bmpd == null ) return;
+
+			if( e.type == "touchstart" )
+				e = e.changedTouches[0];
 
 			var x = e.clientX, 
 				y = e.clientY,
@@ -266,6 +272,9 @@
 			context.canvas.addEventListener( "mousemove", onMove );
 			context.canvas.addEventListener( "mouseup", onUp );
 
+			context.canvas.addEventListener( "touchmove", onMove );
+			context.canvas.addEventListener( "touchend", onUp );
+
 			startX = e.clientX;
 		};
 
@@ -274,6 +283,9 @@
 			var prop = selectedMenuLabel.text; 
 
 			if( prop == null || prop == "" ) return;
+
+			if( e.type == "touchstart" )
+				e = e.changedTouches[0];
 
 			var curr = group.currentSelected, 
 				mat5 = curr.matrix,
@@ -312,6 +324,9 @@
 		{
 			context.canvas.removeEventListener( "mousemove", onMove );
 			context.canvas.removeEventListener( "mouseup", onUp );
+
+			context.canvas.removeEventListener( "touchmove", onMove );
+			context.canvas.removeEventListener( "touchend", onUp );
 		};
 
 		function onResize(e)
