@@ -5,26 +5,71 @@
 <script src="https://code.createjs.com/createjs-2014.12.12.min.js"></script>
 <script type="text/javascript" src="http://dnvy0084.github.io/l2/js/stats.min.js"></script>
 <script type="text/javascript" src="http://10.67.16.21:8000/build/bitmap.js"></script>
+
 <script type="text/javascript">
 	(function(){
 
 		"use strict";
 		
 		var context,
-			buttons,
+			iconSet,
 			bmpd,
+			group,
+			selectedMenuLabel,
+			spritesheet,
+			footer,
+			matrices = [],
 			stage;
 
 		//const
-		var footerHeight = 100;
+		var footerHeight = 79;
+
+		function loadAssets()
+		{
+			var preload = new createjs.LoadQueue( true ),
+				imgURL = "raw/colormatrix_spritesheet.png",
+				info;
+
+			preload.on( "fileload", function(e) {
+
+				info = { images: [imgURL] };
+				info.frames = [];
+
+				for( var i = 0, l = e.result.frames.length; i < l; i++ )
+				{
+					var o = e.result.frames[i].frame;
+
+					info.frames.push( [o.x, o.y, o.w, o.h] );
+				}
+
+				spritesheet = new createjs.SpriteSheet( info );
+				init();
+			});
+
+			preload.on( "error", function(e){
+				console.log( e );
+			});
+
+			preload.loadFile({
+				src: "raw/colormatrix_spritesheet.json",
+				type: createjs.AbstractLoader.JSON
+			});
+		};
 
 		function init()
 		{
 			context = document.getElementById( "canvas" ).getContext( "2d" );
-			stage = new createjs.Stage( "canvas" );
 
-			buttons = layout();
-			addImage( "raw/sanche.jpg" );
+			stage = new createjs.Stage( "canvas" );
+			stage.enableMouseOver();
+
+			group = new createjs.Group();
+
+			iconSet = layout();
+			addImage( "raw/dog.png" );
+			footer = new createjs.Shape();
+			stage.addChildAt( footer, 0 );
+
 			onResize();
 
 			var stats = addStats();
@@ -34,8 +79,10 @@
 
 				stats.begin();
 
-				stage.update();
-				drawFooter();
+					if( bmpd )
+						bmpd.colorMatrices = matrices;
+
+					stage.update();
 
 				stats.end();
 			});
@@ -43,58 +90,128 @@
 
 		function layout()
 		{
-			var sheetInfo = {
-				images: [ "raw/colorMatrix_button_sheet.gif" ],
-				frames: [
-					[0,0,112,96],
-					[112,0,112,96],
-					[0,96,112,96],
-					[112,96,112,96]
-				]
-			},
-				buttons = [],
+			selectedMenuLabel = new createjs.Text( "", "15px NanumGothic", "#000" );
 
-				sheet = new createjs.SpriteSheet( sheetInfo ), 
-				names = [ "sample", "load" ],
-				button;
+			selectedMenuLabel.x = selectedMenuLabel.y = 100000;
+			selectedMenuLabel.textAlign = "center";
+			selectedMenuLabel.textBaseLine = "alphabetic";
 
+			stage.addChild( selectedMenuLabel );
 
-			for( var i = 0; i < 2; i++ )
+			var iconSet = [], icon, r,
+				W = context.canvas.width,
+				H = context.canvas.height;
+
+			var nameSet = [ 
+				"save", 6, "r", false,
+				"saturation", 4, "l", true,
+				"load", 7, "r",	false,
+				"invert", 2, "l", true,
+				"grayscale", 5, "l", true,
+				"contrast", 1, "l", true,
+				"brightness", 0, "l", true, 
+				"black&white", 3, "l", true
+			];
+
+			for( var i = 0, l = spritesheet._frames.length; i < l; i += 2 )
 			{
-				button = new createjs.Sprite( sheet );
-				button.skinIndex = [ i * 2, i * 2 + 1 ];
-				button.name = names[i];
+				icon = new createjs.SpriteButton( spritesheet, null, {
+					mousedown: i,
+					click: i + 1, 
+					mouseout: i + 1
+				})
 
-				stage.addChild( button );
-				buttons.push( button );
+				icon.name = nameSet[i/2 * 4];
+				icon.align = nameSet[i/2*4+2];
+				icon.on( "click", onIconClick );
+				
 
-				button.gotoAndStop( button.skinIndex[0] );
+				if( nameSet[i/2*4+3] )
+					group.add( icon );
 
-				button.addEventListener( "mousedown", function(e){
-
-					var currentButton = e.currentTarget;
-
-					currentButton.gotoAndStop( currentButton.skinIndex[1] );
-
-					context.canvas.addEventListener( "mouseup", function(e){
-
-						currentButton.gotoAndStop( currentButton.skinIndex[0] );
-						context.canvas.removeEventListener( "mouseup", e.callee );
-					});
-				});
+				stage.addChild( icon );
+				iconSet[ nameSet[i/2*4+1] ] = icon;
 			}
 			
-			return buttons;
+			return iconSet;
+		};
+
+		function onIconClick(e)
+		{
+			var icon = e.currentTarget;
+
+			if( group.contains( icon ) )
+			{
+				group.currentSelected = icon;
+
+				var t = selectedMenuLabel,
+					r = icon.getBounds();
+
+				t.text = icon.name;
+				t.x = Math.max( 3, icon.x + r.width / 2 );
+				t.y = icon.y - 22;	
+			}
+
+			switch( icon.name )
+			{
+				case "save": saveImageToFile(); break;
+				case "load": loadImageFromLocal(); break;
+			}
+		};
+
+		function saveImageToFile()
+		{
+			var dataURL = createjs.BitmapData.toDataURL( bmpd ),
+				img = document.createElement( "img" );
+
+			img.src = dataURL;
+			img.style.pointerEvents = "auto";
+
+			document.getElementById( "image-container" ).appendChild( img );
+			document.getElementById( "outer-container" ).style.display = "block";
+			document.getElementById( "dimmed" ).style.display = "block";
+		};
+
+		function loadImageFromLocal()
+		{
+			var input = document.createElement( "INPUT" );
+
+			input.type = "file";
+			input.setAttribute( "id", "fileBrowser" );
+			input.style.display = "none";
+
+			document.body.appendChild( input );
+			input.click();
+
+			input.addEventListener( "change", function(e){
+				console.log( input.files );
+
+				var reader = new FileReader();
+				
+				reader.readAsDataURL( input.files[0] );
+
+				reader.onload = function( e )
+				{
+					console.log( e.target.result );
+					addImage( e.target.result );
+
+					/*createjs.BitmapData.getImageData( e.target.result, function(img){
+						bmpd.dispose();
+						bmpd.imageData = img;
+					});*/
+				}
+			});
 		};
 
 		function drawFooter()
 		{
 			context.save();
 
-				context.strokeStyle = "#7d7d7d";
+				context.strokeStyle = "#000";
+				context.strokeWidth = 1;
 				context.beginPath();
-				context.moveTo( 0, context.canvas.height - footerHeight );
-				context.lineTo( context.canvas.width, context.canvas.height - footerHeight );
+				context.moveTo( 0, context.canvas.height - footerHeight - .5 );
+				context.lineTo( context.canvas.width, context.canvas.height - footerHeight - .5 );
 				context.stroke();
 
 			context.restore();
@@ -104,37 +221,140 @@
 		{
 			createjs.BitmapData.getImageData( url, function( imageData ){
 
-				bmpd = new createjs.BitmapData( imageData );
+				if( bmpd != null ) 
+				{
+					bmpd.dispose();
+					bmpd.parent.removeChild( bmpd );
+				}
 
-				stage.addChild( bmpd );
+				bmpd = new createjs.BitmapData( imageData );
+				bmpd.border = true;
+
+				stage.addChildAt( bmpd, 0 );
+
+				matrices = [];
+
+				for( var i = 0, l = iconSet.length; i < l; i++ )
+				{
+					var icon = iconSet[i];
+
+					icon.matrix = new math.Mat5();
+					matrices.push( icon.matrix );
+				}
 
 				onResize();
+
+				context.canvas.addEventListener( "mousedown", onDown );
 			});
+		};
+
+		var startX;
+
+		function onDown( e )
+		{
+			if( bmpd == null ) return;
+
+			var x = e.clientX, 
+				y = e.clientY,
+				left = bmpd.x,
+				right = bmpd.x + bmpd.imageData.width,
+				top = bmpd.y,
+				bottom = bmpd.y + bmpd.imageData.height;
+
+			if( x < left || x > right || y < top || y > bottom ) return;
+
+			context.canvas.addEventListener( "mousemove", onMove );
+			context.canvas.addEventListener( "mouseup", onUp );
+
+			startX = e.clientX;
+		};
+
+		function onMove( e )
+		{
+			var prop = selectedMenuLabel.text; 
+
+			if( prop == null || prop == "" ) return;
+
+			var curr = group.currentSelected, 
+				mat5 = curr.matrix,
+				dx = e.clientX - startX;
+
+			switch( prop )
+			{
+				case "brightness":
+					mat5.brightness += dx / 5;
+					break;
+
+				case "contrast":
+					mat5.contrast += dx / 100;
+					break;
+				case "invert":
+					mat5.invert += dx / 100;
+					break;
+
+				case "black&white":
+					mat5.binary += dx / 1000;
+					break;
+
+				case "saturation":
+					mat5.grayscale -= dx / 100;
+					break;
+
+				case "grayscale":
+					mat5.grayscale += dx / 100;
+					break;
+			}
+
+			startX = e.clientX;
+		};
+
+		function onUp(e)
+		{
+			context.canvas.removeEventListener( "mousemove", onMove );
+			context.canvas.removeEventListener( "mouseup", onUp );
 		};
 
 		function onResize(e)
 		{
-			context.canvas.width = document.body.clientWidth;
-			context.canvas.height = document.body.clientHeight;
+			var W = context.canvas.width = document.body.clientWidth, 
+				H = context.canvas.height = document.body.clientHeight;
 
 			var button, rect, spaceX = 50;
 
-			for( var i = 0, l = buttons.length; i < l; i++ )
+			for( var i = 0, l = iconSet.length; i < l; i++ )
 			{
-				button = buttons[i];
+				button = iconSet[i];
 				rect = button.getBounds();
 
-				button.x = ( context.canvas.width - ( rect.width << 1 ) - spaceX ) / 2 + i * (rect.width+spaceX);
-				button.y = ( context.canvas.height - rect.height - 10 ) >> 1;
+				button.x = button.align == "l" ? rect.width * i : W - ( rect.width * ( l - i ) );
+				button.y = H - rect.height;
 			}
 
 			if( bmpd )
 			{
 				rect = bmpd.getBounds();
 
-				bmpd.x = ( context.canvas.width - rect.width ) / 2;
-				bmpd.y = ( context.canvas.height - footerHeight - rect.height ) / 2;
+				bmpd.x = ( W - rect.width ) / 2;
+				bmpd.y = ( H - footerHeight - rect.height ) / 2;
 			}
+
+			var g = footer.graphics;
+
+			g.clear();
+
+			g.beginFill( "#fff" );
+				g.moveTo( 0, 0 );
+				g.lineTo( W, 0 );
+				g.lineTo( W, H );
+				g.lineTo( 0, H );
+			g.endFill();
+
+			g.beginStroke( "#000" );
+				g.moveTo( 0, 0.5 );
+				g.lineTo( W, 0.5 );
+			g.endStroke();
+
+			footer.y = H - footerHeight;
 		};
 
 		function addStats()
@@ -142,17 +362,29 @@
 			var stats = new Stats();
 
 			stats.setMode(0);
-			stats.domElement.style.position = "absolute"
+			stats.domElement.style.position = "absolute";
 			stats.domElement.style.top = "0px";
-			stats.domElement.style.left = "0px";
+			stats.domElement.style.left = "100%";
+			stats.domElement.style.transform = "translate(-100%,0%)";
 
 			document.body.appendChild( stats.domElement );
 
 			return stats;
 		};
 
-		window.onload = init;
+		function onDimmedClick(e)
+		{
+			var container = document.getElementById( "image-container" );
+
+			container.removeChild( container.lastChild );
+			
+			document.getElementById( "outer-container" ).style.display = "none";
+			document.getElementById( "dimmed" ).style.display = "none";
+		}
+
+		window.onload = loadAssets;
 		window.onresize = onResize;
+		window.onDimmedClick = onDimmedClick;
 
 	})();
 </script>
@@ -163,10 +395,41 @@
 	canvas{
 		/* background-color: #f00; */
 	}
+	.outer{
+		position: absolute;
+		width: 100%;
+		height: 100%;
+		top: 0px;
+		left: 0px;
+		display: none;
+		pointer-events: none;
+	}
+	.inner{
+		position: relative;
+		text-align: center;
+		width: 100%;
+		top: 50%;
+		transform: translate( 0, -50% );
+	}
+	.dimmed{
+		position: absolute;
+		top: 0%;
+		left: 0%;
+		width: 100%;
+		height: 100%;
+		background-color: #000;
+		display: none;
+		opacity: 0.6;
+	}
 </style>
 <body>
 	<div class="wrapper">
 		<canvas id="canvas"></canvas>
+	</div>
+	<div class="dimmed" id="dimmed" onclick="onDimmedClick(event)">
+	</div>
+	<div class="outer" id="outer-container">
+		<div class="inner" id="image-container"/>
 	</div>
 </body>
 </html>
