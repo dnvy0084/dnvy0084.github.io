@@ -328,10 +328,29 @@ p.append = function( mat )
 
 길고 복잡해 보이지만 A 행렬의 행과 B 행렬의 열을 순서대로 곱하고 더한 결과입니다. 
 
--- 예제 작성 중 --
+Example
+===
+
+아래는 5x5 color matrix 를 이용한 예제입니다. 하단 아이콘을 선택하여 이미지 위에서 드래그하면 효과를 바꿀 수 있습니다. 상단 5x5 Input text를 이용해서도 값을 변경 할 수 있습니다. 
+
+
+<div>
+  <iframe style="border: 1px solid #000;" width="100%" height="1000" src="http://dnvy0084.github.io/example/colormatrix.html" frameborder="0" allowfullscreen></iframe>
+</div>
+
+
+[예제 보기] 
+
+[소스 보기]
+
+[lib 소스 보기]
 
 
 [Pixel Manipulation]: http://dnvy0084.github.io/update/2015/02/25/pixel_manipulation.html
+[예제 보기]:http://dnvy0084.github.io/example/colormatrix.html
+[소스 보기]: https://github.com/dnvy0084/dnvy0084.github.io/blob/master/example/colormatrix.html
+
+[lib 소스 보기]: https://github.com/dnvy0084/snapseed/tree/master/src
 
 <!-- 
 \begin{bmatrix}

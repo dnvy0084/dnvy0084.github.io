@@ -5,28 +5,31 @@
 
 	<script src="https://code.createjs.com/createjs-2014.12.12.min.js"></script>
 	<script type="text/javascript" src="http://dnvy0084.github.io/l2/js/stats.min.js"></script>
-	<!--<script type="text/javascript" src="http://10.67.16.21:8000/build/bitmap.js"></script>-->
 	<script type="text/javascript" src="js/bitmap.min.js"></script>
 	<script type="text/javascript">
 		(function(){
 
 			"use strict";
 			
-			var context,
-				iconSet,
-				bmpd,
-				group,
-				selectedMenuLabel,
-				spritesheet,
-				footer,
-				matrices = [],
-				stats,
-				setting,
-				stage;
+			var context, // Canvas Context
+				iconSet, // 하단 아이콘(SpriteButton) 담는 배열
+				bmpd,	// createjs.BitmapData
+				group, 	// SpriteButton Group: 라디오 버튼 그룹과 같은 역할
+				selectedMenuLabel, // 현재 선택된 효과 라벨
+				spritesheet,	// 버튼 sprite sheet
+				footer,	// 하단 메뉴 박스. createjs.Shape
+				matrices = [],	// 조절 가능한 5x5 행렬 배열
+				stats,	// 디버깅 용 fps 표시
+				setting,	// 행렬 입력 용 UI
+				stage;	// 스테이지. createjs.Stage
 
 			//const
 			var footerHeight = 79;
 
+			/* 
+				window.onload callback 
+				에셋 로드 및 초기화
+			*/
 			function loadAssets()
 			{
 				var preload = new createjs.LoadQueue( true ),
@@ -59,6 +62,9 @@
 				});
 			};
 
+			/*
+				초기 설정
+			*/
 			function init()
 			{
 				context = document.getElementById( "canvas" ).getContext( "2d" );
@@ -94,6 +100,10 @@
 				setting.x = setting.y = 10;
 			};
 
+
+			/*
+				UI, 하단 버튼 등 레이아웃. 
+			*/
 			function layout()
 			{
 				selectedMenuLabel = new createjs.Text( "", "25px NanumGothic", "#000" );
@@ -142,6 +152,12 @@
 				return iconSet;
 			};
 
+
+			/*
+				아이콘 클릭 
+				현재 선택 효과를 바꿔주고 효과 라벨 위치 설정. 
+				setting에 선택도니 행렬 대입
+			*/
 			function onIconClick(e)
 			{
 				var icon = e.currentTarget;
@@ -179,6 +195,10 @@
 				}
 			};
 
+
+			/*
+				Input element를 이용해 행렬값 변경 이벤트 
+			*/
 			function onMatrixInputChange(e)
 			{
 				var curr = group.currentSelected;
@@ -189,6 +209,10 @@
 					bmpd.colorMatrices = matrices;
 			};
 
+			/*
+				저장 버튼
+				toDataURL을 이용 anchor tag를 강제 click
+			*/
 			function saveImageToFile()
 			{
 				var dataURL = createjs.BitmapData.toDataURL( bmpd ),
@@ -202,6 +226,9 @@
 				document.getElementById( "dimmed" ).style.display = "block";
 			};
 
+			/*
+				Input( type: file )을 이용 로컬 저장소의 파일을 불러옴. 
+			*/
 			function loadImageFromLocal()
 			{
 				var input = document.createElement( "INPUT" );
@@ -228,20 +255,13 @@
 				});
 			};
 
-			function drawFooter()
-			{
-				context.save();
 
-					context.strokeStyle = "#000";
-					context.strokeWidth = 1;
-					context.beginPath();
-					context.moveTo( 0, context.canvas.height - footerHeight - .5 );
-					context.lineTo( context.canvas.width, context.canvas.height - footerHeight - .5 );
-					context.stroke();
-
-				context.restore();
-			};
-
+			/*
+				url을 이용해 img element 생성 후 ImageData로 반환. 
+				효과 행렬 초기화, setting 초기화. 
+				currentSelected = null처리. 
+				BitmapData 표시.
+			*/
 			function addImage( url )
 			{
 				createjs.BitmapData.getImageData( url, function( imageData ){
@@ -279,6 +299,12 @@
 				}, context.canvas.width - 15, context.canvas.height - footerHeight - 15 );
 			};
 
+
+
+
+			/*
+				사진 효과 변경을 위한 mouse(touch) interaction
+			*/
 			var startX;
 
 			function onDown( e )
@@ -364,6 +390,10 @@
 				context.canvas.removeEventListener( "touchend", onUp );
 			};
 
+
+			/*
+				window 크기 변경 이벤트
+			*/
 			function onResize(e)
 			{
 				var W = context.canvas.width = document.body.clientWidth, 
@@ -410,6 +440,7 @@
 				stats.domElement.style.top = H - 130 + "px";
 				stats.domElement.style.left = W - 80 + "px";
 			};
+
 
 			function addStats()
 			{
