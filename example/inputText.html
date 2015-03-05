@@ -1,0 +1,50 @@
+<html>
+<head>
+	<title>Input Text</title>
+	<script src="https://code.createjs.com/createjs-2014.12.12.min.js"></script>
+	<script type="text/javascript" src="http://dnvy0084.github.io/l2/js/stats.min.js"></script>
+	<script type="text/javascript" src="http://10.67.16.21:8000/build/bitmap.js"></script>
+
+	<script type="text/javascript">
+		(function (){
+			
+			function init()
+			{
+				var mat5 = new math.Mat5();
+					mat5.brightness = 10;
+					console.log( mat5.toString() );
+
+				var setting = new createjs.Mat5Setting( mat5 );
+
+				document.body.appendChild( setting.domElement );
+
+				setting.x = 100;
+				setting.y = 200;
+
+				setting.domElement.addEventListener( "INPUT_CHANGE", function(e){
+					console.log( setting.matrix.toString() );
+				});
+			}; 
+
+			window.onload = init;
+		})();
+
+	</script>
+	<style type="text/css">
+		.row{
+		}
+		.Mat5Setting-input{
+			margin: 0px;
+			width: 55px;
+		}
+	</style>
+</head>
+
+<body>
+	<div class="wrapper">
+		<div class="outer">
+			<div class="inner" id="input-container"></div>
+		</div>
+	</div>
+</body>
+</html>

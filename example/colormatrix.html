@@ -5,18 +5,8 @@
 
 	<script src="https://code.createjs.com/createjs-2014.12.12.min.js"></script>
 	<script type="text/javascript" src="http://dnvy0084.github.io/l2/js/stats.min.js"></script>
-	<script type="text/javascript" src="http://10.67.16.21:8000/build/bitmap.js"></script>
-	<script>
-	  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-	  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-	  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-	  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
-
-	  ga('create', 'UA-59578721-1', 'auto');
-	  ga('send', 'pageview');
-
-	</script>
-
+	<!--<script type="text/javascript" src="http://10.67.16.21:8000/build/bitmap.js"></script>-->
+	<script type="text/javascript" src="js/bitmap.min.js"></script>
 	<script type="text/javascript">
 		(function(){
 
@@ -30,6 +20,8 @@
 				spritesheet,
 				footer,
 				matrices = [],
+				stats,
+				setting,
 				stage;
 
 			//const
@@ -76,33 +68,35 @@
 				createjs.Touch.enable(stage);
 
 				group = new createjs.Group();
-
 				iconSet = layout();
-				addImage( "raw/dog.png" );
+				
 				footer = new createjs.Shape();
 				stage.addChildAt( footer, 0 );
 
-				onResize();
+				stats = addStats();
 
-				var stats = addStats();
+				onResize();
+				addImage( "raw/dog.png" );
 
 				createjs.Ticker.setFPS(60);
 				createjs.Ticker.addEventListener( "tick", function(e){
 
 					stats.begin();
-
-						if( bmpd )
-							bmpd.colorMatrices = matrices;
-
 						stage.update();
-
 					stats.end();
 				});
+
+				setting = new createjs.Mat5Setting();
+				document.body.appendChild( setting.domElement );
+				setting.domElement.addEventListener( "INPUT_CHANGE", onMatrixInputChange );
+				setting.domElement.style.display = "none";
+
+				setting.x = setting.y = 10;
 			};
 
 			function layout()
 			{
-				selectedMenuLabel = new createjs.Text( "", "15px NanumGothic", "#000" );
+				selectedMenuLabel = new createjs.Text( "", "25px NanumGothic", "#000" );
 
 				selectedMenuLabel.x = selectedMenuLabel.y = 100000;
 				selectedMenuLabel.textAlign = "center";
@@ -154,14 +148,28 @@
 
 				if( group.contains( icon ) )
 				{
-					group.currentSelected = icon;
+					if( group.currentSelected == icon )
+					{
+						group.currentSelected = null;
 
-					var t = selectedMenuLabel,
-						r = icon.getBounds();
+						selectedMenuLabel.x = 10000;
+						setting.domElement.style.display = "none";
+					}
+					else
+					{
+						group.currentSelected = icon;
+						setting.domElement.style.display = "block";
 
-					t.text = icon.name;
-					t.x = Math.max( 3, icon.x + r.width / 2 );
-					t.y = icon.y - 22;	
+						var t = selectedMenuLabel,
+							r = icon.getBounds();
+
+						t.text = icon.name;
+
+						t.x = Math.max( t.getBounds().width / 2 + 5, icon.x + r.width / 2 );
+						t.y = icon.y - 35;
+
+						setting.matrix = icon.matrix;
+					}
 				}
 
 				switch( icon.name )
@@ -169,6 +177,16 @@
 					case "save": saveImageToFile(); break;
 					case "load": loadImageFromLocal(); break;
 				}
+			};
+
+			function onMatrixInputChange(e)
+			{
+				var curr = group.currentSelected;
+
+				if( curr == null ) return;
+
+				if( bmpd )
+					bmpd.colorMatrices = matrices;
 			};
 
 			function saveImageToFile()
@@ -206,11 +224,6 @@
 					{
 						console.log( e.target.result );
 						addImage( e.target.result );
-
-						/*createjs.BitmapData.getImageData( e.target.result, function(img){
-							bmpd.dispose();
-							bmpd.imageData = img;
-						});*/
 					}
 				});
 			};
@@ -241,6 +254,7 @@
 
 					bmpd = new createjs.BitmapData( imageData );
 					bmpd.border = true;
+					bmpd.borderWidth = 1;
 
 					stage.addChildAt( bmpd, 0 );
 
@@ -258,7 +272,8 @@
 
 					context.canvas.addEventListener( "mousedown", onDown );
 					context.canvas.addEventListener( "touchstart", onDown );
-				});
+
+				}, context.canvas.width - 15, context.canvas.height - footerHeight - 15 );
 			};
 
 			var startX;
@@ -330,6 +345,11 @@
 				}
 
 				startX = e.clientX;
+
+				setting.matrix = mat5;
+
+				if( bmpd )
+					bmpd.colorMatrices = matrices;
 			};
 
 			function onUp(e)
@@ -382,6 +402,10 @@
 				g.endStroke();
 
 				footer.y = H - footerHeight;
+
+				stats.domElement.style.position = "absolute";
+				stats.domElement.style.top = H - 130 + "px";
+				stats.domElement.style.left = W - 80 + "px";
 			};
 
 			function addStats()
@@ -391,8 +415,7 @@
 				stats.setMode(0);
 				stats.domElement.style.position = "absolute";
 				stats.domElement.style.top = "0px";
-				stats.domElement.style.left = "100%";
-				stats.domElement.style.transform = "translate(-100%,0%)";
+				stats.domElement.style.left = "0px";
 
 				document.body.appendChild( stats.domElement );
 
@@ -415,6 +438,18 @@
 
 		})();
 	</script>
+
+	<script>
+	  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+	  ga('create', 'UA-59578721-1', 'auto');
+	  ga('send', 'pageview');
+
+	</script>
+
 	<style type="text/css">
 		body{
 			margin: 0px;
@@ -437,6 +472,7 @@
 			width: 100%;
 			top: 50%;
 			transform: translate( 0, -50% );
+			-webkit-transform:translateY(-50%);
 		}
 		.dimmed{
 			position: absolute;
@@ -448,10 +484,15 @@
 			display: none;
 			opacity: 0.6;
 		}
+		.Mat5Setting-input{
+			margin: 2px;
+			width: 80px;
+		}
 	</style>
+
 </head>
 <body>
-	<div class="wrapper">
+	<div class="wrapper" id="wrapper">
 		<canvas id="canvas"></canvas>
 	</div>
 	<div class="dimmed" id="dimmed" onclick="onDimmedClick(event)">
