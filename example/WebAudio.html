@@ -30,10 +30,11 @@
 				getCanvasContext();
 				getAudioContextAndCreateBuffer();
 
-				var url = inMyDefence;
+				var url = delilah;
 
 				loadSound( url );
-				getAlbumCover(url, 
+
+				getAlbumCover( url, 
 					function( dataURL ){
 
 						drawImage( dataURL );
@@ -50,6 +51,8 @@
 				var img = document.createElement("IMG");
 					img.src = dataURL;
 
+				document.getElementById("_wrapper").appendChild( img );
+
 				var W = context.canvas.width,
 					H = context.canvas.height,
 
@@ -63,7 +66,15 @@
 				context.drawImage( img, x,y,_w,_h );
 
 				imageData = context.getImageData( 0, 0, W, H );
-				context.putImageData( imageData, 0, 0 );
+
+				console.log( imageData.data.length, imageData.data[3] );
+
+				(function run(){
+					
+					context.putImageData( imageData, 0, 0 );
+
+					requestAnimationFrame( run );
+				})();
 			}
 
 			function getCanvasContext()
@@ -157,7 +168,7 @@
 	</style>
 </head>
 <body>
-	<div class="wrapper">
+	<div class="wrapper" id="_wrapper">
 		<div class="header">
 			<h1 class="title">AudioPlayer with HTML5 Web Audio API</h1>
 		</div>
