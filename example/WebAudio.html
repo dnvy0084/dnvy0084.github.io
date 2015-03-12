@@ -1,0 +1,173 @@
+<html>
+<head>
+	<title>Exploring the HTML5 Web Audio</title>
+	<script type="text/javascript" src="js/id3-minimized.js"></script>
+	<script type="text/javascript">
+
+		(function (){
+			
+			"use strict";
+
+			/*
+				audio vars
+			*/
+			var audio,
+				audiobuf,
+				sourceNode,
+				inMyDefence = "raw/in_my_defence.mp3",
+				thisIsMoment = "raw/this_is_moment.mp3",
+				delilah = "raw/delilah.mp3",
+				defaultAlbumCover = "raw/default_albumCover.jpg";
+
+			/*
+				canvas vars
+			*/
+			var context,
+				imageData;
+
+			function onload()
+			{
+				getCanvasContext();
+				getAudioContextAndCreateBuffer();
+
+				var url = inMyDefence;
+
+				loadSound( url );
+				getAlbumCover(url, 
+					function( dataURL ){
+
+						drawImage( dataURL );
+					}, 
+					function(){
+
+						drawImage( defaultAlbumCover );
+					}
+				);
+			}
+
+			function drawImage( dataURL )
+			{
+				var img = document.createElement("IMG");
+					img.src = dataURL;
+
+				var W = context.canvas.width,
+					H = context.canvas.height,
+
+					scale = Math.max( W / img.width, H / img.height ),
+
+					_w = img.width * scale,
+					_h = img.height * scale,
+					x = ( W - _w ) / 2,
+					y = ( H - _h ) / 2;
+
+				context.drawImage( img, x,y,_w,_h );
+
+				imageData = context.getImageData( 0, 0, W, H );
+				context.putImageData( imageData, 0, 0 );
+			}
+
+			function getCanvasContext()
+			{
+				context = document.getElementById("canvas").getContext( "2d" );
+
+			};
+
+			function getAudioContextAndCreateBuffer()
+			{
+				audio = new webkitAudioContext();
+
+				sourceNode = audio.createBufferSource();
+				sourceNode.connect( audio.destination );
+			};
+
+			function loadSound( url )
+			{
+				var req = new XMLHttpRequest();
+
+				req.open( "GET", url, true );
+				req.responseType = "arraybuffer";
+
+				req.onload = function()
+				{
+					audio.decodeAudioData( req.response, function(buffer){
+						playSound( buffer );
+					})
+				}
+
+				req.send();
+			};
+
+			function playSound( buffer )
+			{
+				sourceNode.buffer = buffer;
+
+				sourceNode.start(0);
+			};
+
+			function getAlbumCover( url, onComplete, onNotExistCover )
+			{
+				var base64;
+
+				ID3.loadTags( url, function(){
+
+					var tags = ID3.getAllTags( url );
+
+					if( !tags.hasOwnProperty("picture") )
+					{
+						if( typeof onNotExistCover !== "undefined" ) onNotExistCover();
+
+						return;
+					}
+
+					var base64String = "";
+
+					for( var i = 0, l = tags.picture.data.length; i < l; i++ )
+					{
+						base64String += String.fromCharCode( tags.picture.data[i] );
+					}
+
+					onComplete( "data:" + tags.picture.format + ";base64," + window.btoa( base64String ) );
+
+				}, {
+					tags: ["picture", "image", "title", "comment"],
+					onError: function( message )
+					{
+						console.log( "onError", message );
+					}
+				} );
+
+			};
+
+			window.onload = onload;
+
+		})();
+
+	</script>
+	<style type="text/css">
+		canvas
+		{
+			border: 1px solid #333;
+			transform: translate(50%,0%);
+		}
+		.wrapper
+		{
+			border:1px solid #eee;
+			width: 1024px;
+		}
+	</style>
+</head>
+<body>
+	<div class="wrapper">
+		<div class="header">
+			<h1 class="title">AudioPlayer with HTML5 Web Audio API</h1>
+		</div>
+		<div class="content">
+			<canvas class="audio_background" id="canvas" width="400" height="300"></canvas>
+		</div>
+
+		<div class="footer">
+			<h3 class="link_header"><a href="http://css.dzone.com/articles/exploring-html5-web-audio" target="_blank">goto article - Exploring the HTML5 Web Audio: Visualizing Sound</a></h3>	
+		</div>
+	</div>
+</body>
+</html>
