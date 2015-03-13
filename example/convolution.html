@@ -1,0 +1,154 @@
+<html>
+<head>
+	<title>convolution filter</title>
+	
+	<script type="text/javascript">
+
+		this.display = this.display || {};
+
+		(function (){
+			
+			"use strict";
+
+			function Convolution( row, col )
+			{
+				this.row = row || 3;
+				this.col = col || 3;
+
+				this.raw = new Float32Array( this.row * this.col );
+			}
+
+			var p = Convolution.prototype;
+
+			p.set = function( raw )
+			{
+				if( raw.length != this.row * this.col )
+					throw new Error( "invalid raw data, not match length" );
+
+				this.raw = raw;
+			};
+
+			display.Convolution = Convolution;
+		})();
+	</script>
+
+	<script type="text/javascript">
+		(function (){
+			
+			"use strict";
+
+			var context, img, imageData;
+
+			function init()
+			{
+				img = document.getElementById( "img" );
+
+				context = document.getElementById( "canvas" ).getContext( "2d" );
+				context.canvas.width = img.width;
+				context.canvas.height = img.height;
+
+				imageData = getImageData();
+
+				var c = new display.Convolution( 3, 3 );
+
+				/*c.set( new Float32Array([
+					0, 	 0.2, 0,
+					0.2, 0.2, 0.2, 
+					0, 	 0.2, 0
+				]) );*/
+
+				c.set( new Float32Array([
+					0, 0, 0,
+					-1, 1, 0,
+					0, 0, 0,
+				]) );
+
+				applyConvolution( c );
+
+				(function render( ms ){
+					
+					context.putImageData( imageData, 0, 0 );
+
+					requestAnimationFrame( render );
+				})();
+			};
+
+			function applyConvolution( c )
+			{
+				var b = imageData.data, //imageData.data Uint8ClampedArray
+					W = imageData.width, // image width
+					H = imageData.height, // image height
+					i, // current pixel index
+					ci, // current convolution filter pixel index
+					sum = new Float32Array(3), // return pixel value r,g,b only
+					cx, // convolution matrix x index 
+					cy, // convolution matrix y index 
+					v; // current convolution factor
+
+				for( var y = c.row >> 1, l = H - 1; y < l; y++ )
+				{
+					for( var x = c.col >> 1, m = W - 1; x < m; x++ )
+					{
+						i = y * W + x;
+
+						sum[0] = sum[1] = sum[2] = 0;
+						cx = cy = c.col >> 1;
+
+						for( var my = 0; my < c.row; my++ )
+						{
+							for( var mx = 0; mx < c.col; mx++ )
+							{
+								ci = 4 * ( i + ( mx - cx ) + parseInt( my / c.row ) * W );
+								v = c.raw[ my * c.col + mx ];
+
+								sum[0] += b[ci  ] * v;
+								sum[1] += b[ci+1] * v;
+								sum[2] += b[ci+2] * v;
+							}
+						}
+
+						i *= 4;
+
+						b[i  ] = sum[0];
+						b[i+1] = sum[1];
+						b[i+2] = sum[2];
+					}
+				}
+			};
+
+			function getImageData()
+			{
+				context.drawImage( img, 0, 0 );
+
+				var imageData = context.getImageData( 0, 0, context.canvas.width, context.canvas.height );
+
+				context.clearRect( 0, 0, context.canvas.width, context.canvas.height );
+
+				return imageData;
+			};
+
+			window.onload = init;
+		})();
+	</script>
+	<style>
+		canvas{
+			/* border:1px solid #333; */
+		}
+	</style>
+</head>
+<body>
+	<div class="wrapper" id="div_stage">
+		<h1>Convolution Filter example</h1>
+		<canvas id="canvas">
+			canvas element
+		</canvas>
+		
+		<h3>original image</h3>
+		<div class="imgContainer" id="div_original">
+			<img id="img" src="raw/lego1.jpg" alt="lego movie">
+		</div>
+
+		<h5><a href="http://blog.ivank.net/fastest-gaussian-blur.html" target="_blank">goto article</a></h5>
+	</div>
+</body>
+</html>

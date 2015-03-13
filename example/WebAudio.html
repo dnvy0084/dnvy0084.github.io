@@ -1,5 +1,6 @@
 <html>
 <head>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<title>Exploring the HTML5 Web Audio</title>
 	<script type="text/javascript" src="js/id3-minimized.js"></script>
 	<script type="text/javascript">
@@ -12,12 +13,18 @@
 				audio vars
 			*/
 			var audio,
+				id3,
 				audiobuf,
 				sourceNode,
-				inMyDefence = "raw/in_my_defence.mp3",
-				thisIsMoment = "raw/this_is_moment.mp3",
-				delilah = "raw/delilah.mp3",
-				defaultAlbumCover = "raw/default_albumCover.jpg";
+				defaultAlbumCover = "raw/default_albumCover.jpg",
+				mp3set = [
+					"raw/in_my_defence.mp3",
+					"raw/this_is_moment.mp3",
+					"raw/delilah.mp3",
+					"raw/heavy.mp3"
+				],
+				current = 0,
+				url = mp3set[ current ];
 
 			/*
 				canvas vars
@@ -25,14 +32,153 @@
 			var context,
 				imageData;
 
+
+			/*******************************************************************************
+			
+				Initialize, Layout, AddEvent
+
+			*******************************************************************************/
 			function onload()
 			{
 				getCanvasContext();
-				getAudioContextAndCreateBuffer();
+				getAudioContext();
 
-				var url = delilah;
-
+				layout();
+				addEvents();
 				loadSound( url );
+			}
+
+			function layout()
+			{
+				var ul = document.createElement( "UL" ),
+					li, a;
+
+				for( var i = 0, l = mp3set.length; i < l; i++ )
+				{
+					li = document.createElement( "LI" );
+					a = document.createElement( "A" );
+					a.setAttribute( "href", "#" );
+					a.setAttribute( "index", i );
+
+					a.innerHTML = mp3set[i].match( /[a-zA-Z]+\.mp3/g )[0];
+					a.addEventListener( "click", onMp3LinkClick );
+
+					li.appendChild( a );
+					ul.appendChild( li );
+				}
+
+				document.getElementById( "_wrapper" ).appendChild( ul );
+			};
+
+			function addEvents()
+			{
+				document.body.addEventListener( "keyup", onKeyUp );
+			};
+
+			function onKeyUp(e)
+			{
+				switch( e.keyCode )
+				{
+					case 27: stopAudio(); break;//esc
+				}
+			};
+
+			function onMp3LinkClick(e)
+			{
+				current = e.target.getAttribute( "index" );
+
+				stopAudio();
+				loadSound( mp3set[ current ] );
+			};
+
+
+
+			/*
+				getContext, AudioContext and CanvasRenderingContext2d
+			*/
+
+			function getCanvasContext()
+			{
+				context = document.getElementById("canvas").getContext( "2d" );
+			};
+
+			function getAudioContext()
+			{
+				audio = new webkitAudioContext();
+			};
+
+
+
+
+
+
+			/*******************************************************************************
+			
+				Canvas Props and Methods
+
+			*******************************************************************************/
+
+			function drawImage( dataURL )
+			{
+				var img = document.createElement("IMG");
+					img.src = dataURL;
+
+				function onLoad()
+				{
+					var W = context.canvas.width,
+						H = context.canvas.height;
+
+					var scale = Math.max( W / img.width, H / img.height ),
+
+						_w = img.width * scale,
+						_h = img.height * scale,
+						x = ( W - _w ) / 2,
+						y = ( H - _h ) / 2;
+
+					context.drawImage( img, x,y,_w,_h );
+
+					imageData = context.getImageData( 0, 0, W, H );
+					context.putImageData( imageData, 0, 0 );
+				};
+
+				if( img.complete ) 	onLoad();
+				else 				img.addEventListener( "load", onLoad );
+			}
+
+			function drawTitle( context )
+			{
+				console.log( id3.title, id3.artist );
+			};
+
+			
+
+
+
+
+			/*******************************************************************************
+			
+				AudioContext, loadSound, AudioSourceNode, dipose
+
+			*******************************************************************************/
+
+			function loadSound( url )
+			{
+				var req = new XMLHttpRequest();
+
+				req.open( "GET", url, true );
+				req.responseType = "arraybuffer";
+
+				req.onload = function()
+				{
+					disposeBufferSource( sourceNode );
+					sourceNode = createBufferSource( audio );
+
+					audio.decodeAudioData( req.response, function(buffer){
+						playAudio( buffer );
+					})
+				}
+
+				req.send();
 
 				getAlbumCover( url, 
 					function( dataURL ){
@@ -44,76 +190,80 @@
 						drawImage( defaultAlbumCover );
 					}
 				);
-			}
-
-			function drawImage( dataURL )
-			{
-				var img = document.createElement("IMG");
-					img.src = dataURL;
-
-				document.getElementById("_wrapper").appendChild( img );
-
-				var W = context.canvas.width,
-					H = context.canvas.height,
-
-					scale = Math.max( W / img.width, H / img.height ),
-
-					_w = img.width * scale,
-					_h = img.height * scale,
-					x = ( W - _w ) / 2,
-					y = ( H - _h ) / 2;
-
-				context.drawImage( img, x,y,_w,_h );
-
-				imageData = context.getImageData( 0, 0, W, H );
-
-				console.log( imageData.data.length, imageData.data[3] );
-
-				(function run(){
-					
-					context.putImageData( imageData, 0, 0 );
-
-					requestAnimationFrame( run );
-				})();
-			}
-
-			function getCanvasContext()
-			{
-				context = document.getElementById("canvas").getContext( "2d" );
-
 			};
 
-			function getAudioContextAndCreateBuffer()
+			function createBufferSource( context )
 			{
-				audio = new webkitAudioContext();
+				var node = context.createBufferSource();
+				node.connect( context.destination );
 
-				sourceNode = audio.createBufferSource();
-				sourceNode.connect( audio.destination );
-			};
-
-			function loadSound( url )
-			{
-				var req = new XMLHttpRequest();
-
-				req.open( "GET", url, true );
-				req.responseType = "arraybuffer";
-
-				req.onload = function()
+				node.onended = function()
 				{
-					audio.decodeAudioData( req.response, function(buffer){
-						playSound( buffer );
-					})
+					current = ( current + 1 ) % mp3set.length;
+					loadSound( mp3set[ current ] );
+
+					console.log( "audio ended", current );
 				}
 
-				req.send();
+				return node;
 			};
 
-			function playSound( buffer )
+			function disposeBufferSource( node )
+			{
+				if( node == null ) return;
+
+				node.onended = null;
+			};
+
+
+
+
+
+
+
+			/*******************************************************************************
+			
+				Audio play, stop, pause, resume
+
+			*******************************************************************************/
+
+			function playAudio( buffer )
 			{
 				sourceNode.buffer = buffer;
 
-				sourceNode.start(0);
+				sourceNode.start(0, currentTime );
 			};
+
+			function stopAudio( pauseTime )
+			{
+				if( sourceNode == null ) return;
+
+				currentTime = pauseTime || 0;
+
+				sourceNode.stop();
+				disposeBufferSource( sourceNode );
+			}
+
+			var currentTime = 0;
+
+			function pauseAudio()
+			{
+				if( sourceNode == null ) return;
+
+				stopAudio( souceNode.currentTime );
+			}
+
+
+
+
+
+
+
+			/*******************************************************************************
+			
+				ID3 tags, album cover, title, artist
+
+			*******************************************************************************/
 
 			function getAlbumCover( url, onComplete, onNotExistCover )
 			{
@@ -121,9 +271,10 @@
 
 				ID3.loadTags( url, function(){
 
-					var tags = ID3.getAllTags( url );
+					id3 = ID3.getAllTags( url );
+					console.log( "complete meta data", id3 );
 
-					if( !tags.hasOwnProperty("picture") )
+					if( !id3.hasOwnProperty("picture") )
 					{
 						if( typeof onNotExistCover !== "undefined" ) onNotExistCover();
 
@@ -132,22 +283,30 @@
 
 					var base64String = "";
 
-					for( var i = 0, l = tags.picture.data.length; i < l; i++ )
+					for( var i = 0, l = id3.picture.data.length; i < l; i++ )
 					{
-						base64String += String.fromCharCode( tags.picture.data[i] );
+						base64String += String.fromCharCode( id3.picture.data[i] );
 					}
 
-					onComplete( "data:" + tags.picture.format + ";base64," + window.btoa( base64String ) );
+					onComplete( "data:" + id3.picture.format + ";base64," + window.btoa( base64String ) );
 
 				}, {
-					tags: ["picture", "image", "title", "comment"],
+					tags: [ "picture", "title", "comment", "artist", "duration" ],
 					onError: function( message )
 					{
 						console.log( "onError", message );
 					}
 				} );
-
 			};
+
+			function getID3Tag( property )
+			{
+				if( typeof id3 === "undefined" ) return;
+				if( !id3.hasOwnProperty( property ) ) return null;
+
+				return id3[ property ];
+			};
+
 
 			window.onload = onload;
 
@@ -158,12 +317,12 @@
 		canvas
 		{
 			border: 1px solid #333;
-			transform: translate(50%,0%);
 		}
 		.wrapper
 		{
+			font-family: NanumGothic, RixGo B, Arial;
 			border:1px solid #eee;
-			width: 1024px;
+			width: 100%;
 		}
 	</style>
 </head>
@@ -173,11 +332,11 @@
 			<h1 class="title">AudioPlayer with HTML5 Web Audio API</h1>
 		</div>
 		<div class="content">
-			<canvas class="audio_background" id="canvas" width="400" height="300"></canvas>
+			<canvas class="audio_background" id="canvas" width="300" height="180"></canvas>
 		</div>
 
 		<div class="footer">
-			<h3 class="link_header"><a href="http://css.dzone.com/articles/exploring-html5-web-audio" target="_blank">goto article - Exploring the HTML5 Web Audio: Visualizing Sound</a></h3>	
+			<h5 class="link_header"><a href="http://css.dzone.com/articles/exploring-html5-web-audio" target="_blank">goto article - Exploring the HTML5 Web Audio: Visualizing Sound</a></h5>	
 		</div>
 	</div>
 </body>
