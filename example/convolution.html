@@ -58,9 +58,9 @@
 				]) );*/
 
 				c.set( new Float32Array([
-					0, 0, 0,
-					-1, 1, 0,
-					0, 0, 0,
+					-1, 0, 1,
+					-1, 0, 1,
+					-1, 0, 1,
 				]) );
 
 				applyConvolution( c );
@@ -98,7 +98,7 @@
 						{
 							for( var mx = 0; mx < c.col; mx++ )
 							{
-								ci = 4 * ( i + ( mx - cx ) + parseInt( my / c.row ) * W );
+								ci = 4 * ( i + ( mx - cx ) + ( my - cx ) * W );
 								v = c.raw[ my * c.col + mx ];
 
 								sum[0] += b[ci  ] * v;

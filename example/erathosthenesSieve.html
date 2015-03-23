@@ -1,0 +1,207 @@
+<html>
+<head>
+	<title>prime number</title>
+	<script type="text/javascript">
+
+		(function ( global ){
+			
+			"use strict";
+
+			function init()
+			{
+				var cases = [
+					"isPrimeNum", isPrimeNum,
+					"sieveOfErathosthenes", makeSearchFunc()
+				];
+
+				
+				layout( cases );
+				exec( cases, [ 1001, 10001 ] );
+
+				/*console.log( sieveOfErathosthenes( 13 ) );
+
+				var era = makeSearchFunc();
+
+				console.log( era( 10001 ) );
+
+				console.log( findPrimeNum( era, 10001 ) );*/
+				var n = Math.pow( 2, 10 ) - 1;
+
+				var s = performance.now();
+
+				console.log( isPrimeNum( n ) );
+
+				console.log( performance.now() - s );
+
+				s = performance.now();
+
+				console.log( sieveOfErathosthenes( n ) );
+
+				console.log( performance.now() - s );
+			};
+
+			// dom layout
+			function layout( cases )
+			{
+				var ul = document.getElementById( "result" ),
+					li, div;
+
+				for( var i = 0; i < cases.length; i += 2 )
+				{
+					li = document.createElement( "LI" );
+
+					li.innerHTML = cases[i];
+
+					div = document.createElement( "DIV" ); 
+					div.setAttribute( "id", cases[i] );
+
+					li.appendChild( div );
+					ul.appendChild( li );
+				}
+			};
+
+			// case 실행. 
+			function exec( cases, params )
+			{
+				var start, div, result;
+
+				for( var i = 0; i < cases.length; i += 2 )
+				{
+					div = document.getElementById( cases[i] );
+
+					result = "";
+
+					for( var j = 0; j < params.length; j++ )
+					{
+						start = performance.now();
+
+						var prime = findPrimeNum( cases[i+1], params[j] );
+
+						result += "[" + params[j] + "]: " + parseInt(performance.now() - start) + "ms - " + prime + "<br>";
+					}
+
+					div.innerHTML = result;
+				}	
+			};
+
+
+			/*
+				findPrimeNum( func, 10 ) -> 10번째 소수 반환
+			*/
+			function findPrimeNum( alogorithm, n )
+			{
+				alogorithm = alogorithm || isPrimeNum;
+
+				var pcount = 0;
+
+				for( var i = 2; true; i++ )
+				{
+					if( ! alogorithm( i ) ) continue;
+
+					if( ++pcount == n ) return i;
+				}
+			}
+
+
+			/*
+				return n == 소수;
+
+				isPrimeNum( 13 ) -> true;
+				isPrimeNum( 18 ) -> false;
+
+				진약수 유무로 판별.
+			*/
+			function isPrimeNum( n )
+			{
+				var limit = parseInt( Math.sqrt(n) );
+
+				for( var i = 2; i <= limit; i++ )
+				{
+					if( n % i == 0 ) return false;
+				}
+
+				return true;
+			}
+
+
+			/*
+				return n == 소수;
+
+				isPrimeNum( 13 ) -> true;
+				isPrimeNum( 18 ) -> false;
+
+				에라토스테네스의 체 알고리즘. 
+			*/
+			function sieveOfErathosthenes( n )
+			{
+				var sieve = new Uint8Array(n);
+
+				for( var i = 2; i <= n; i++ )
+				{
+					if( sieve[i] == 1 ) continue;
+
+					if( i == n ) return true;
+					
+					for( var j = i; j <= n; j += i )
+					{
+						sieve[j] = 1;
+
+						if( j == n ) return false;
+					}
+				}
+
+				return true;
+			};
+
+			function makeSearchFunc()
+			{
+				//			  0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,11,12,13
+				var sieve = [ 0, 0, 1 ];
+
+				return function( n )
+				{
+					var len = sieve.length, prime;
+
+					if( n < len ) return sieve[n] == 1;
+
+					for( var i = len; i <= n; i++ )
+					{
+						prime = true;
+
+						for( var j = 2; j < i; j++ )
+						{
+							if( sieve[j] != 1 ) continue;
+
+							prime = prime && i % j != 0;
+
+							if( !prime ) break;
+						}
+
+						sieve[i] = prime ? 1 : 0;
+					}
+
+					return sieve[n] == 1;
+				}
+			};
+
+			
+
+			global.onload = init;
+
+		})( this );
+
+	</script>
+</head>
+<body>
+	<div class="wrapper">
+		<div class="header">
+			<h1 class="title">Find 10001st prime</h1>
+		</div>
+		<div class="content">
+			<ul id="result">
+				
+			</ul>
+		</div>
+	</div>
+</body>
+</html>
